@@ -7,7 +7,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 import { $, esc, lvl, rank, toast } from "./util.js";
 import { S, save, fresh, replaceState, exportState } from "./state.js";
 
-const SUPABASE_JS = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
+// Dernière version 2.x : nécessaire pour les nouvelles clés "sb_publishable_…"
+const SUPABASE_JS = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const GMAX = 7;
 
 export const cloud = {

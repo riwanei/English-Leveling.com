@@ -1,13 +1,11 @@
 // =====================================================================
 // Configuration du mode en ligne (comptes, guildes, chat)
-// Remplace les deux valeurs par celles de TON projet Supabase :
-// Supabase > Project Settings > API (ou "Connect")
+// Valeurs de TON projet Supabase : Project Settings > API Keys
 //   - Project URL      → SUPABASE_URL
-//   - anon public key  → SUPABASE_ANON_KEY
-// La clé "anon" est faite pour être publique : ce sont les règles RLS
+//   - Publishable key  → SUPABASE_ANON_KEY (ou l'ancienne clé "anon public")
+// Cette clé est faite pour être publique : ce sont les règles RLS
 // du fichier supabase/schema.sql qui protègent les données.
-// Ne mets JAMAIS ici la clé "service_role".
-// Tant que ces valeurs ne sont pas remplies, le site marche en mode solo.
+// Ne mets JAMAIS ici la clé "secret" / "service_role".
 // =====================================================================
-export const SUPABASE_URL = "COLLE_ICI_TON_PROJECT_URL";
-export const SUPABASE_ANON_KEY = "COLLE_ICI_TA_CLE_ANON";
+export const SUPABASE_URL = "https://bqeyxdppvgzepqhupouh.supabase.co";
+export const SUPABASE_ANON_KEY = "sb_publishable_ISkDsJlq825QKrRB0u4syw_LoLl-Dht";
