@@ -5,7 +5,7 @@ import { $, esc, shuffle, pick, norm, lvl, rank, toast, today } from "./util.js"
 import { S, save, fresh, replaceState, checkDay } from "./state.js";
 import { CATS, GAMES, G, STATNAMES, QUESTS, POWERS } from "./content.js";
 import { play, introSeen } from "./cinema.js";
-import { cloud, initCloud, renderGuild, renderAccount, pushProgress, announceLevel } from "./cloud.js";
+import { cloud, initCloud, renderGuild, renderAccount, renderReviews, pushProgress, announceLevel } from "./cloud.js";
 
 const app = $("#app");
 const myLevel = () => lvl(S.xp).l;
@@ -47,7 +47,7 @@ function speak(t) {
 // =====================================================================
 // ONGLETS
 // =====================================================================
-const TABS = [["status", "Statut"], ["gates", "Portes"], ["powers", "Pouvoirs"], ["guild", "Guilde"], ["account", "Compte"]];
+const TABS = [["status", "Statut"], ["gates", "Portes"], ["powers", "Pouvoirs"], ["guild", "Guilde"], ["reviews", "Avis"], ["account", "Compte"]];
 let R = null, timerId = null;
 
 function shell() {
@@ -69,7 +69,7 @@ function shell() {
   app.querySelectorAll("nav button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); shell(); });
   $("#accbtn").onclick = () => { S.tab = "account"; save(); shell(); };
   const v = $("#view");
-  ({ status: viewStatus, gates: viewGates, powers: viewPowers, guild: () => renderGuild(v), account: () => renderAccount(v) })[S.tab]();
+  ({ status: viewStatus, gates: viewGates, powers: viewPowers, guild: () => renderGuild(v), reviews: () => renderReviews(v), account: () => renderAccount(v) })[S.tab]();
 }
 
 function viewStatus() {
@@ -91,9 +91,14 @@ function viewStatus() {
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
     <div style="min-width:0"><h3>${rec.name}</h3><p class="mute small">${rec.cat === "S" ? "Porte rouge" : "Niveau " + rec.cat} · ${rec.desc}</p></div>
     <button class="btn main" id="rec">Entrer</button></div></section>
+  ${S.total >= 20 ? `<section class="win"><div class="tag">Ton avis compte</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
+    <p class="mute" style="min-width:0;flex:1 1 220px">Le jeu t'aide à progresser ? Dis-nous ce que tu en penses en 30 secondes.</p>
+    <button class="btn" id="gorev">Donner mon avis</button></div></section>` : ""}
   ${cloud.session ? "" : `<p class="note">Ta progression est enregistrée dans ce navigateur. Crée un compte (onglet Compte) pour la retrouver sur tous tes appareils et rejoindre une guilde.</p>`}
   <p class="foot"><button class="linkbtn" id="reset">Réinitialiser ma progression</button></p>`;
   $("#rec").onclick = () => start(rec.id);
+  if ($("#gorev")) $("#gorev").onclick = () => { S.tab = "reviews"; save(); shell(); };
   $("#reset").onclick = e => {
     if (e.target.dataset.sure) { replaceState(fresh()); pushProgress(); shell(); }
     else { e.target.dataset.sure = 1; e.target.textContent = "Confirmer la remise à zéro ?"; }
@@ -289,7 +294,7 @@ shell();
 // Quand l'état du compte ou des guildes change, on rafraîchit l'écran (sauf en plein donjon)
 initCloud(({ full }) => {
   if (R) return;
-  if (full || S.tab === "account" || S.tab === "status") shell();
+  if (full || S.tab === "account" || S.tab === "status" || S.tab === "reviews") shell();
   else if (S.tab === "guild") renderGuild($("#view"));
 });
 if (!introSeen()) setTimeout(() => play("awaken"), 300);

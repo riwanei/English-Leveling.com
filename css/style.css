@@ -35,6 +35,7 @@ p{margin:0}
 .brand span{color:var(--glow);text-shadow:0 0 12px rgba(76,196,255,.6)}
 nav{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
 nav button{all:unset;cursor:pointer;padding:10px 14px;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;color:var(--mute);border-bottom:2px solid transparent;white-space:nowrap}
+@media (max-width:560px){nav{flex-wrap:wrap;overflow-x:visible;row-gap:0}nav button{padding:8px 10px;font-size:15px}}
 nav button[aria-current="page"]{color:var(--glow);border-color:var(--glow)}
 nav button:hover,nav button:focus-visible{color:var(--ink)}
 #view{display:flex;flex-direction:column;gap:18px}
@@ -152,6 +153,32 @@ input::placeholder{color:#5d7299}
 .note{border-left:3px solid var(--gold);padding:10px 12px;background:rgba(255,203,92,.06);font-size:14px}
 .err{color:var(--red);font-size:14px;min-height:1.2em}
 .okmsg{color:var(--ok);font-size:14px}
+/* avis */
+.revsum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:center;margin-top:10px}
+@media (max-width:460px){.revsum{grid-template-columns:1fr;gap:12px}}
+.revavg{text-align:center}
+.revavg .big{font-size:48px;line-height:1}
+.stars{color:var(--gold);letter-spacing:2px;font-size:18px}
+.revbars{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums;font-size:14px}
+.revbar{display:grid;grid-template-columns:3.2em 1fr 2.5em;gap:8px;align-items:center}
+.revbar .bar{margin-top:0;height:8px}
+.revbar .bar i{background:var(--gold);box-shadow:0 0 8px rgba(255,203,92,.5)}
+.revbar span:last-child{text-align:right}
+.lbl{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:4px;font-family:var(--f-display)}
+.starpick{display:flex;gap:4px}
+.starpick button{all:unset;cursor:pointer;font-size:34px;line-height:1;color:var(--mute);padding:2px 4px}
+.starpick button.on{color:var(--gold);text-shadow:0 0 10px rgba(255,203,92,.5)}
+.starpick button:hover{color:var(--gold)}
+.starpick button:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+textarea{width:100%;background:#071022;border:1px solid var(--line);color:var(--ink);font:500 16px/1.5 var(--f-body);padding:10px 12px;outline:none;resize:vertical;min-height:100px;border-radius:0}
+textarea:focus{border-color:var(--glow);box-shadow:0 0 12px rgba(76,196,255,.3)}
+.review{border:1px solid var(--line);background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.review.mine{border-color:var(--gold)}
+.review-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.review-head b{font-family:var(--f-display);color:var(--glow)}
+.review p{overflow-wrap:anywhere;white-space:pre-line}
+.review .report{all:unset;cursor:pointer;color:var(--mute);text-decoration:underline}
+.review .report:focus-visible{outline:2px solid var(--glow)}
 /* notifications */
 #toasts{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:8px;width:min(420px,calc(100% - 32px));pointer-events:none}
 .toast{background:rgba(9,20,44,.96);border:1px solid var(--glow);padding:10px 14px;box-shadow:0 0 20px rgba(76,196,255,.35);animation:pop .35s ease-out}

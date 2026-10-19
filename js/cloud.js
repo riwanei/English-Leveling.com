@@ -466,3 +466,146 @@ function renderPseudoForm(box) {
     notify({ full: true });
   };
 }
+
+// =====================================================================
+// Écran Avis : notes sur 5 et commentaires, lisibles par tout le monde
+// =====================================================================
+const REV = { list: null, mine: null, loadedAt: 0, draftRating: 0, error: false };
+const STAR = "★", NOSTAR = "☆";
+
+async function loadReviews(force) {
+  if (!force && REV.list && Date.now() - REV.loadedAt < 30000) return;
+  const { data, error } = await cloud.sb.rpc("get_reviews");
+  REV.error = !!error;
+  if (error) { console.warn(error); return; }
+  REV.list = data || []; REV.loadedAt = Date.now();
+  REV.mine = null;
+  if (cloud.session) {
+    const r = await cloud.sb.from("reviews").select("rating,body,hidden,updated_at").eq("user_id", cloud.session.user.id).maybeSingle();
+    REV.mine = r.data || null;
+  }
+}
+
+export function renderReviews(box) {
+  if (!box) return;
+  if (!cloud.configured || cloud.status === "error") {
+    box.innerHTML = `<section class="win"><div class="tag">Avis</div><p style="margin-top:8px">${cloud.configured ? "Impossible de joindre le serveur pour le moment. Recharge la page dans un instant." : "Les avis seront disponibles quand le mode en ligne sera activé."}</p></section>`;
+    return;
+  }
+  if (cloud.status !== "ready") { box.innerHTML = `<section class="win"><p class="mute">Chargement des avis…</p></section>`; return; }
+  box.innerHTML = `<section class="win" id="revsum"><p class="mute">Chargement des avis…</p></section>
+    <section class="win" id="revform"></section>
+    <section aria-label="Avis des joueurs" class="stack" id="revlist"></section>`;
+  loadReviews().then(() => { drawSummary(); drawReviewForm(); drawReviewList(); });
+}
+
+function starsText(n) { return STAR.repeat(n) + NOSTAR.repeat(5 - n); }
+
+function drawSummary() {
+  const box = $("#revsum"); if (!box) return;
+  if (REV.error) { box.innerHTML = `<div class="tag">Avis des chasseurs</div><p class="err" style="margin-top:8px">Les avis ne sont pas encore activés sur le serveur (fichier supabase/avis.sql à exécuter).</p>`; return; }
+  const list = REV.list || [];
+  const n = list.length;
+  const avg = n ? list.reduce((s, r) => s + r.rating, 0) / n : 0;
+  const counts = [5, 4, 3, 2, 1].map(k => list.filter(r => r.rating === k).length);
+  box.innerHTML = `<div class="tag">Avis des chasseurs</div>
+    <div class="revsum">
+      <div class="revavg"><div class="big">${n ? avg.toFixed(1).replace(".", ",") : "–"}</div>
+        <div class="stars" aria-hidden="true">${starsText(Math.round(avg))}</div>
+        <div class="mute small">${n} avis</div></div>
+      <div class="revbars">${[5, 4, 3, 2, 1].map((k, i) => `<div class="revbar"><span>${k} ${STAR}</span><div class="bar"><i style="width:${n ? counts[i] / n * 100 : 0}%"></i></div><span class="mute">${counts[i]}</span></div>`).join("")}</div>
+    </div>`;
+}
+
+function drawReviewForm() {
+  const box = $("#revform"); if (!box) return;
+  if (REV.error) { box.hidden = true; return; }
+  if (!cloud.session || !cloud.profile) {
+    box.innerHTML = `<div class="tag">Ton avis compte</div>
+      <p style="margin-top:8px">Le jeu t'aide à progresser ? Il manque quelque chose ? Dis-le aux autres chasseurs.</p>
+      <div class="actions left"><button class="btn main" id="revlogin">${cloud.session ? "Choisir mon pseudo pour donner mon avis" : "Se connecter pour donner mon avis"}</button></div>`;
+    $("#revlogin").onclick = () => { S.tab = "account"; save(); notify({ full: true }); };
+    return;
+  }
+  const mine = REV.mine;
+  if (!REV.draftRating) REV.draftRating = mine ? mine.rating : 0;
+  box.innerHTML = `<div class="tag">${mine ? "Ton avis" : "Donne ton avis"}</div>
+    ${mine && mine.hidden ? `<p class="note" style="margin-top:8px">Ton avis a été signalé par plusieurs joueurs et n'est plus visible publiquement.</p>` : ""}
+    <form class="stack" id="frev" style="margin-top:10px">
+      <div><span class="lbl" id="ratelbl">Ta note</span>
+        <div class="starpick" role="radiogroup" aria-labelledby="ratelbl">${[1, 2, 3, 4, 5].map(k => `<button type="button" role="radio" aria-checked="${REV.draftRating === k}" aria-label="${k} étoile${k > 1 ? "s" : ""}" data-r="${k}" class="${k <= REV.draftRating ? "on" : ""}">${k <= REV.draftRating ? STAR : NOSTAR}</button>`).join("")}</div></div>
+      <div><label for="revtxt">Ton commentaire</label>
+        <textarea id="revtxt" maxlength="600" rows="4" placeholder="Qu'est-ce qui t'aide le plus ? Qu'est-ce que tu ajouterais ?" required>${esc(mine ? mine.body : "")}</textarea>
+        <div class="mute small" id="revcount" style="text-align:right">0 / 600</div></div>
+      <div class="row"><button class="btn main" type="submit">${mine ? "Mettre à jour" : "Publier mon avis"}</button>
+        ${mine ? `<button class="btn danger" type="button" id="revdel">Supprimer</button>` : ""}</div>
+      <div class="err" id="reverr" role="alert"></div>
+    </form>
+    <p class="mute small">Ton pseudo sera affiché avec ton avis. Pas d'informations personnelles, pas de liens.</p>`;
+  const ta = $("#revtxt"), cnt = $("#revcount");
+  const upd = () => { cnt.textContent = `${ta.value.length} / 600`; };
+  ta.oninput = upd; upd();
+  box.querySelectorAll(".starpick button").forEach(b => b.onclick = () => {
+    REV.draftRating = +b.dataset.r;
+    box.querySelectorAll(".starpick button").forEach(x => {
+      const on = +x.dataset.r <= REV.draftRating;
+      x.classList.toggle("on", on); x.textContent = on ? STAR : NOSTAR;
+      x.setAttribute("aria-checked", String(+x.dataset.r === REV.draftRating));
+    });
+  });
+  $("#frev").onsubmit = async e => {
+    e.preventDefault();
+    const text = ta.value.trim(), btn = e.target.querySelector("button[type=submit]");
+    if (!REV.draftRating) return setErr("#reverr", "Choisis une note de 1 à 5 étoiles.");
+    if (text.length < 3) return setErr("#reverr", "Écris au moins quelques mots.");
+    if (BAD_WORDS.test(text)) return setErr("#reverr", "Reste respectueux : ton avis contient un mot interdit.");
+    if (CONTACT.test(text)) return setErr("#reverr", "Les liens, e-mails et numéros de téléphone ne sont pas autorisés.");
+    btn.disabled = true;
+    const uid = cloud.session.user.id;
+    const res = mine
+      ? await cloud.sb.from("reviews").update({ rating: REV.draftRating, body: text }).eq("user_id", uid)
+      : await cloud.sb.from("reviews").insert({ user_id: uid, rating: REV.draftRating, body: text });
+    btn.disabled = false;
+    if (res.error) return setErr("#reverr", explain(res.error));
+    toast("Avis", mine ? "Ton avis a été mis à jour." : "Merci ! Ton avis est publié.", "gold");
+    await loadReviews(true); drawSummary(); drawReviewForm(); drawReviewList();
+  };
+  if (mine) $("#revdel").onclick = async e => {
+    if (!e.target.dataset.sure) { e.target.dataset.sure = 1; e.target.textContent = "Confirmer la suppression"; return; }
+    const { error } = await cloud.sb.from("reviews").delete().eq("user_id", cloud.session.user.id);
+    if (error) return setErr("#reverr", explain(error));
+    REV.draftRating = 0; toast("Avis", "Ton avis a été supprimé.");
+    await loadReviews(true); drawSummary(); drawReviewForm(); drawReviewList();
+  };
+}
+
+function drawReviewList() {
+  const box = $("#revlist"); if (!box) return;
+  const list = REV.list || [];
+  if (REV.error) { box.innerHTML = ""; return; }
+  if (!list.length) { box.innerHTML = `<p class="mute">Aucun avis pour l'instant. Sois le premier chasseur à donner le tien !</p>`; return; }
+  const me = cloud.session ? cloud.session.user.id : null;
+  box.innerHTML = "";
+  list.forEach(r => {
+    const card = document.createElement("article"); card.className = "review" + (r.user_id === me ? " mine" : "");
+    const head = document.createElement("div"); head.className = "review-head";
+    const who = document.createElement("b"); who.textContent = r.username + (r.user_id === me ? " (toi)" : "");
+    const st = document.createElement("span"); st.className = "stars"; st.textContent = starsText(r.rating); st.setAttribute("aria-label", `${r.rating} sur 5`);
+    head.append(who, st);
+    const body = document.createElement("p"); body.textContent = r.body;
+    const foot = document.createElement("div"); foot.className = "review-foot mute small";
+    const d = new Date(r.updated_at);
+    foot.textContent = d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) + (r.updated_at !== r.created_at ? " · modifié" : "");
+    if (cloud.profile && r.user_id !== me) {
+      const rp = document.createElement("button"); rp.className = "report"; rp.textContent = "Signaler";
+      rp.onclick = async () => {
+        rp.disabled = true;
+        const { error } = await cloud.sb.from("review_reports").insert({ review_user: r.user_id, reporter: me });
+        if (error && error.code !== "23505") { rp.disabled = false; return toast("Signalement", explain(error)); }
+        rp.textContent = "Signalé"; toast("Signalement", "Merci. L'avis sera masqué s'il est signalé par un autre joueur.");
+      };
+      foot.append(" · ", rp);
+    }
+    card.append(head, body, foot); box.appendChild(card);
+  });
+}

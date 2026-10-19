@@ -88,6 +88,26 @@ Le service d'e-mail fourni par défaut par Supabase n'envoie qu'aux membres de t
 ### La page de confidentialité
 Ouvre `confidentialite.html` et remplace les passages marqués `À MODIFIER` : ton nom ou pseudo, une adresse e-mail de contact et la région Supabase.
 
+## Espace Avis
+
+L'onglet **Avis** permet aux joueurs connectés de laisser une note sur 5 et un commentaire (un avis par joueur, modifiable). Tout le monde peut lire les avis, même sans compte.
+
+Pour l'activer : **SQL Editor → New query**, colle tout `supabase/avis.sql`, puis **Run** (une seule fois, après `schema.sql`).
+
+Lire tous les avis, y compris ceux masqués par les signalements :
+```sql
+select p.username, r.rating, r.body, r.hidden, r.updated_at
+from reviews r join profiles p on p.id = r.user_id
+order by r.updated_at desc;
+```
+Remettre visible un avis masqué à tort :
+```sql
+update reviews set hidden = false
+where user_id = (select id from profiles where username = 'PSEUDO');
+delete from review_reports
+where review_user = (select id from profiles where username = 'PSEUDO');
+```
+
 ## Modération
 
 Protections déjà en place :
