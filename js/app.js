@@ -4,6 +4,7 @@
 import { $, esc, shuffle, pick, norm, lvl, rank, toast, today } from "./util.js";
 import { S, save, fresh, replaceState, checkDay } from "./state.js";
 import { CATS, GAMES, G, STATNAMES, QUESTS, POWERS } from "./content.js";
+import { play, introSeen } from "./cinema.js";
 import { cloud, initCloud, renderGuild, renderAccount, pushProgress, announceLevel } from "./cloud.js";
 
 const app = $("#app");
@@ -14,11 +15,11 @@ const maxMana = () => Math.min(120, 40 + myLevel() * 4);
 function gainXp(n) {
   const before = myLevel(); S.xp += n; const after = myLevel();
   if (after <= before) return;
-  toast("Système", `Niveau supérieur ! Vous êtes maintenant <b>niveau ${after}</b>.`, "gold");
   const r0 = rank(before), r1 = rank(after);
-  if (r1[1] !== r0[1]) setTimeout(() => toast("Réévaluation", `Nouveau titre : <b>${r1[2]}</b>.`, "gold"), 700);
-  POWERS.filter(p => p.lv > before && p.lv <= after)
-    .forEach((p, i) => setTimeout(() => toast("Nouvelle compétence", `<b>${p.name}</b> débloquée.`, "mana"), 1300 + i * 600));
+  // Cinématique : réévaluation si le rang change, sinon niveau supérieur
+  play(r1[1] !== r0[1] ? "rank" : "levelup", { level: after, rank: r1 }).then(() =>
+    POWERS.filter(p => p.lv > before && p.lv <= after)
+      .forEach((p, i) => setTimeout(() => toast("Nouvelle compétence", `<b>${p.name}</b> débloquée.`, "mana"), 300 + i * 600)));
   announceLevel(after);
 }
 function progressQuests() {
@@ -52,11 +53,19 @@ let R = null, timerId = null;
 function shell() {
   checkDay();
   const accountLabel = cloud.profile ? esc(cloud.profile.username) : cloud.session ? "Choisir mon pseudo" : "Se connecter";
+  const L = lvl(S.xp), Rk = rank(L.l);
+  app.classList.remove("narrow");
   app.innerHTML = `<header class="title-bar"><div><div class="tag">Le Système vous a choisi</div><h1 class="brand">English <span>Leveling</span></h1></div>
-    <div class="head-right"><span class="mute">Niv. ${myLevel()} · Série ${S.streak} j</span>
+    <div class="head-right"><span class="mute">Niv. ${L.l} · Série ${S.streak} j</span>
     <button class="btn sm ${cloud.session ? "" : "main"}" id="accbtn">${accountLabel}</button></div></header>
-    <nav aria-label="Sections">${TABS.map(([k, n]) => `<button data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ""}>${n}</button>`).join("")}</nav>
-    <div id="view"></div>`;
+    <div class="layout"><aside class="side">
+      <nav aria-label="Sections">${TABS.map(([k, n]) => `<button data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ""}>${n}</button>`).join("")}</nav>
+      <div class="mini" aria-hidden="true"><div class="mini-rank"><b>${Rk[1]}</b></div>
+        <div><div class="lvl-sm">Niveau ${L.l}</div><div class="mute small">${Rk[2]}</div>
+        <div class="bar"><i style="width:${L.into / L.need * 100}%"></i></div>
+        <div class="mute small" style="margin-top:4px;font-variant-numeric:tabular-nums">${L.into} / ${L.need} XP</div></div></div>
+    </aside>
+    <div id="view" class="view-${S.tab}"></div></div>`;
   app.querySelectorAll("nav button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); shell(); });
   $("#accbtn").onclick = () => { S.tab = "account"; save(); shell(); };
   const v = $("#view");
@@ -156,6 +165,7 @@ function render() {
     <div class="actions"><button class="btn" id="clr">Effacer</button><button class="btn main" id="go">Valider</button></div>`; }
   const spk = canSpeak && (q.en || q.speakText) ? `<button class="speak" id="spk" aria-label="Écouter la prononciation">Écouter</button>` : "";
   const prompt = esc(q.prompt).replace("___", '<span class="blank">&nbsp;</span>');
+  app.classList.add("narrow");
   app.innerHTML = `${hud}<section class="win" id="qwin">${q.from ? `<div class="tag" style="text-align:center">${esc(q.from)}</div>` : ""}
     <div class="q-prompt ${q.prompt.length > 28 ? "long" : ""}">${prompt}</div><div class="q-sub">${esc(q.sub)} ${spk}</div>${body}<div id="fb"></div></section>
     ${skills}<div class="actions"><button class="linkbtn" id="quit">Fuir le donjon</button></div>`;
@@ -258,6 +268,7 @@ function finish(cleared) {
   else { const b = S.best[r.g.id] || { ok: 0, perfect: false }; S.best[r.g.id] = { ok: Math.max(b.ok, r.ok), perfect: b.perfect || (cleared && r.errors.length === 0) }; }
   progressQuests(); save(); pushProgress();
   const title = boss ? "Raid terminé" : cleared ? (r.errors.length ? "Donjon nettoyé" : "Donjon nettoyé sans dégât") : "Vous avez été vaincu";
+  app.classList.add("narrow");
   app.innerHTML = `<section class="win result"><span class="tag" style="color:${cleared || boss ? "var(--glow)" : "var(--red)"}">[ ${title} ]</span>
     <h2>${r.g.name}</h2><div class="big">+${total} XP</div>
     <div class="mute">${r.ok} bonne${r.ok > 1 ? "s" : ""} réponse${r.ok > 1 ? "s" : ""} · meilleur combo ${r.best}${bonus ? ` · bonus de clear +${bonus}` : ""}</div>
@@ -281,4 +292,4 @@ initCloud(({ full }) => {
   if (full || S.tab === "account" || S.tab === "status") shell();
   else if (S.tab === "guild") renderGuild($("#view"));
 });
-if (!S.total) setTimeout(() => toast("Système", "Vous avez rempli les conditions pour devenir un Joueur. Entrez dans une porte pour commencer."), 400);
+if (!introSeen()) setTimeout(() => play("awaken"), 300);
