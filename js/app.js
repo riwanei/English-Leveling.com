@@ -245,7 +245,7 @@ function submit(btn) {
     S.stats[stat]++; S.total++; S.daily.correct++; if (q.key && S.missed[q.key]) S.missed[q.key]--;
     if ([5, 10, 20].includes(R.combo)) toast("Combo", `${R.combo} coups d'affilée. Multiplicateur ×${mult()}`);
   } else {
-    R.errors.push(q.label); if (q.key) S.missed[q.key] = (S.missed[q.key] || 0) + 1;
+    R.errors.push({ label: q.label, given: givenAnswer(q, btn), why: q.why || "" }); if (q.key) S.missed[q.key] = (S.missed[q.key] || 0) + 1;
     if (R.shield) { R.shield = false; toast("Bouclier d'Ombre", "L'erreur a été absorbée.", "mana"); }
     else {
       R.combo = 0;
@@ -258,9 +258,30 @@ function submit(btn) {
   }
   save();
   if (R.g.boss && ok) { setTimeout(() => R && next(), 350); return; }
-  $("#fb").innerHTML = `<div class="feedback ${ok ? "" : "bad"}">${ok ? "<b>Coup critique !</b> " : "<b>Raté.</b> "}${q.fix}</div>
+  const why = !ok && q.why && !q.fix.includes(esc(q.why)) ? `<br><span class="why">${esc(q.why)}</span>` : "";
+  $("#fb").innerHTML = `<div class="feedback ${ok ? "" : "bad"}">${ok ? "<b>Coup critique !</b> " : "<b>Raté.</b> "}${q.fix}${why}</div>
     <div class="actions"><button class="btn main" id="nx">${R.hp <= 0 ? "Voir le résultat" : "Continuer"}</button></div>`;
   const nx = $("#nx"); nx.focus(); nx.onclick = () => next();
+}
+
+// Ce que le joueur a répondu, pour l'expliquer à la fin du donjon
+function givenAnswer(q, btn) {
+  if (q.type === "choice") return btn ? btn.dataset.o : "";
+  if (q.type === "verb") return `${$("#a1").value.trim()} – ${$("#a2").value.trim()}`;
+  if (q.type === "input") return $("#a1").value.trim();
+  if (q.type === "order") return q.built.map(i => q.words[i]).join(" ");
+  return "";
+}
+
+// Une erreur par notion, avec le nombre de fois où elle a été faite
+function errorReport(errors) {
+  const m = new Map();
+  for (const e of errors) { const x = m.get(e.label); if (x) { x.n++; x.given = e.given; } else m.set(e.label, { ...e, n: 1 }); }
+  return `<div class="list errx" aria-label="Explication des erreurs"><div class="tag">Explication des erreurs</div>
+    ${[...m.values()].map(e => `<div class="errx-item">
+      <div class="errx-ok">✓ ${esc(e.label)}${e.n > 1 ? ` <span class="mute">×${e.n}</span>` : ""}</div>
+      ${e.given ? `<div class="errx-bad">✗ Ta réponse : ${esc(e.given)}</div>` : ""}
+      ${e.why ? `<div class="errx-why">${esc(e.why)}</div>` : ""}</div>`).join("")}</div>`;
 }
 
 function finish(cleared) {
@@ -277,7 +298,7 @@ function finish(cleared) {
   app.innerHTML = `<section class="win result"><span class="tag" style="color:${cleared || boss ? "var(--glow)" : "var(--red)"}">[ ${title} ]</span>
     <h2>${r.g.name}</h2><div class="big">+${total} XP</div>
     <div class="mute">${r.ok} bonne${r.ok > 1 ? "s" : ""} réponse${r.ok > 1 ? "s" : ""} · meilleur combo ${r.best}${bonus ? ` · bonus de clear +${bonus}` : ""}</div>
-    ${r.errors.length ? `<div class="list" aria-label="À revoir"><div class="tag">À revoir</div>${[...new Set(r.errors)].map(e => `<div>${esc(e)}</div>`).join("")}</div>` : `<p style="color:var(--ok)">Aucune erreur. Le Système est impressionné.</p>`}
+    ${r.errors.length ? errorReport(r.errors) :`<p style="color:var(--ok)">Aucune erreur. Le Système est impressionné.</p>`}
     <div class="actions"><button class="btn" id="hb">Retour</button><button class="btn main" id="ag">Relancer</button></div></section>`;
   $("#hb").onclick = shell; $("#ag").onclick = () => start(r.g.id); $("#ag").focus();
 }
@@ -298,3 +319,12 @@ initCloud(({ full }) => {
   else if (S.tab === "guild") renderGuild($("#view"));
 });
 if (!introSeen()) setTimeout(() => play("awaken"), 300);
+
+// Annonce de mise à jour, une seule fois par appareil (pas pour un nouveau joueur, qui découvre tout)
+const MAJ = "errors-1", MAJ_KEY = "english-leveling-maj";
+try {
+  if (localStorage.getItem(MAJ_KEY) !== MAJ) {
+    if (introSeen()) setTimeout(() => toast("Mise à jour du Système", "Chaque erreur est maintenant expliquée : ta réponse, la bonne, et la règle à retenir. Le bilan complet s'affiche à la fin du donjon."), 900);
+    localStorage.setItem(MAJ_KEY, MAJ);
+  }
+} catch (e) { /* stockage indisponible */ }

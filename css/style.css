@@ -116,6 +116,7 @@ input::placeholder{color:#5d7299}
 .feedback{margin-top:16px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(92,240,176,.08);font-size:15px}
 .feedback.bad{border-color:var(--red);background:rgba(255,90,118,.08)}
 .feedback b{font-family:var(--f-display)}
+.feedback .why{display:inline-block;margin-top:6px;color:var(--mute)}
 .skillbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .skill{all:unset;cursor:pointer;border:1px solid var(--mana);color:var(--ink);padding:6px 10px;font-family:var(--f-display);font-size:13px;background:rgba(138,125,255,.1)}
 .skill:hover{background:rgba(138,125,255,.25)}
@@ -130,6 +131,14 @@ input::placeholder{color:#5d7299}
 .big{font-family:var(--f-display);font-size:44px;font-weight:700;color:var(--gold);text-shadow:0 0 16px rgba(255,203,92,.5)}
 .list{width:100%;text-align:left;font-size:14px;max-height:240px;overflow:auto;border:1px solid var(--line);padding:10px}
 .list div{padding-block:3px;border-bottom:1px solid rgba(42,92,174,.35)}
+/* explication des erreurs en fin de donjon */
+.list.errx{max-height:380px;padding:12px 14px}
+.list.errx div{border-bottom:none;padding-block:0}
+.list.errx .errx-item{display:flex;flex-direction:column;gap:2px;padding-block:10px;border-bottom:1px dashed rgba(42,92,174,.5)}
+.list.errx .errx-item:last-child{border-bottom:none}
+.errx-ok{color:var(--ok);font-weight:600}
+.errx-bad{color:var(--red)}
+.errx-why{color:var(--mute)}
 /* guildes */
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row input{flex:1 1 180px}

@@ -378,7 +378,8 @@ function choiceGen(key, sub, en = true) {
     const it = pick(items);
     return {
       type: "choice", prompt: it.q, sub, en, opts: shuffle([it.a, ...it.d]), ans: it.a,
-      fix: `<b>${esc(fillQ(it.q, it.a))}</b>${it.x ? "<br>" + esc(it.x) : ""}`, label: fillQ(it.q, it.a)
+      fix: `<b>${esc(fillQ(it.q, it.a))}</b>${it.x ? "<br>" + esc(it.x) : ""}`, label: fillQ(it.q, it.a),
+      why: it.x || `La bonne réponse est « ${it.a} ».`
     };
   };
 }
@@ -387,7 +388,7 @@ function pairGen(pool, sub, reverse = false) {
   return () => {
     const p = pick(pool); const [q, a] = reverse ? [p[1], p[0]] : [p[0], p[1]];
     const ds = shuffle(pool.filter(x => x !== p)).slice(0, 3).map(x => reverse ? x[0] : x[1]);
-    return { type: "choice", prompt: q, sub, en: reverse, opts: shuffle([a, ...ds]), ans: a, fix: `<b>${esc(q)}</b> = ${esc(a)}`, label: `${q} = ${a}`, speakText: reverse ? q : a };
+    return { type: "choice", prompt: q, sub, en: reverse, opts: shuffle([a, ...ds]), ans: a, fix: `<b>${esc(q)}</b> = ${esc(a)}`, label: `${q} = ${a}`, why: `« ${a} » est la traduction de « ${q} ». Vocabulaire à mémoriser.`, speakText: reverse ? q : a };
   };
 }
 
@@ -399,7 +400,8 @@ function verbGen(filter) {
     return {
       type: "verb", prompt: v.b, sub: v.fr, en: true, key: v.b, hint: [v.p.split("/")[0], v.pp.split("/")[0]],
       check: (a, b) => v.p.split("/").includes(norm(a)) && v.pp.split("/").includes(norm(b)),
-      fix: `<b>${v.b}</b> → ${v.p.replace("/", " / ")} → ${v.pp.replace("/", " / ")}`, label: `${v.b} – ${v.p} – ${v.pp}`
+      fix: `<b>${v.b}</b> → ${v.p.replace("/", " / ")} → ${v.pp.replace("/", " / ")}`, label: `${v.b} – ${v.p} – ${v.pp}`,
+      why: v.p.endsWith("ed") ? `« ${v.b} » est régulier : on ajoute -ed au prétérit et au participe passé.` : `« ${v.b} » (${v.fr}) est irrégulier : pas de -ed. Prétérit « ${v.p.replace("/", " » ou « ")} », participe passé « ${v.pp.replace("/", " » ou « ")} ». À apprendre par cœur.`
     };
   };
 }
@@ -426,6 +428,10 @@ function genNumber() {
   const flat = s => s.replace(/-/g, " ");
   q.check = v => { const x = flat(norm(v)); return x === flat(a) || x === flat(b); };
   q.speakText = a;
+  q.why = n >= 100 ? "Hundred ne prend jamais de s (two hundred). Le and après hundred est britannique : facultatif."
+    : n >= 20 && n % 10 ? "Entre la dizaine et l'unité, on met un trait d'union : twenty-one, forty-five."
+    : n >= 13 && n < 20 ? "De 13 à 19, les nombres finissent par -teen (thirteen, fifteen). Attention : forty s'écrit sans u."
+    : "Nombre de base, à connaître par cœur.";
   return q;
 }
 
@@ -446,28 +452,50 @@ function genTime() {
   const shown = `${h}:${String(m).padStart(2, "0")}`;
   return {
     type: "choice", prompt: shown, sub: "What time is it? Choisis la bonne façon de le dire", en: false, opts: shuffle([...set]), ans,
-    fix: `<b>${shown}</b> = It's ${esc(ans)}`, label: `${shown} = ${ans}`, speakText: "It's " + ans
+    fix: `<b>${shown}</b> = It's ${esc(ans)}`, label: `${shown} = ${ans}`, speakText: "It's " + ans,
+    why: m === 0 ? "Heure pile : on dit l'heure suivie de o'clock."
+      : m === 30 ? "30 minutes = half past + l'heure (la demie après l'heure)."
+      : m === 15 ? "15 minutes = a quarter past + l'heure."
+      : m === 45 ? "45 minutes = a quarter to + l'heure suivante (il manque un quart d'heure)."
+      : m < 30 ? "Jusqu'à la demie, on compte les minutes après l'heure : minutes + past + heure."
+      : "Après la demie, on compte les minutes qui restent avant l'heure suivante : minutes + to + heure suivante."
   };
 }
 
-function genPlural() { const [s, p] = pick(PLURALS); return inputQ(s, "Donne le pluriel", p, `${s} → ${p}`); }
+function pluralWhy(s, p) {
+  if (s === p) return `« ${s} » ne change pas au pluriel.`;
+  if (/(f|fe)$/.test(s) && p.endsWith("ves")) return "Les mots en -f ou -fe font leur pluriel en -ves.";
+  if (/[^aeiou]y$/.test(s) && p.endsWith("ies")) return "Consonne + y : le y devient i, puis on ajoute -es.";
+  if (p === s + "es") return "Après -s, -x, -ch, -sh ou -o, on ajoute -es.";
+  if (p === s + "s") return "Pluriel régulier : on ajoute simplement -s.";
+  return "Pluriel irrégulier : il ne suit aucune règle, à apprendre par cœur.";
+}
+function genPlural() { const [s, p] = pick(PLURALS); const q = inputQ(s, "Donne le pluriel", p, `${s} → ${p}`); q.why = pluralWhy(s, p); return q; }
 
 function genComp() {
   const c = pick(COMPS); const sup = Math.random() < .5;
-  return inputQ(c[0], sup ? "Superlatif (avec the) : le plus…" : "Comparatif : plus…", sup ? c[2] : c[1],
+  const q = inputQ(c[0], sup ? "Superlatif (avec the) : le plus…" : "Comparatif : plus…", sup ? c[2] : c[1],
     `${c[0]} → ${c[1].replace("/", " / ")} → ${c[2].replace("/", " / ")}`);
+  const a = c[0], b = c[1];
+  q.why = b.startsWith("more") ? "Adjectif long (deux syllabes ou plus) : more… pour le comparatif, the most… pour le superlatif, sans -er."
+    : !b.startsWith(a.slice(0, 2)) || a === "far" ? "Comparatif irrégulier : à apprendre par cœur."
+    : /y$/.test(a) ? "Adjectif en -y : le y devient i, puis -er / the -iest."
+    : b === a + a.slice(-1) + "er" ? "Voyelle courte + consonne finale : on double la consonne avant -er / -est."
+    : "Adjectif court : on ajoute -er pour le comparatif, the + -est pour le superlatif.";
+  return q;
 }
 
 function genFalse() {
   const f = pick(FALSE);
   const others = shuffle(FALSE.filter(x => x !== f && x[1] !== f[2] && x[1] !== f[1])).slice(0, 2).map(x => x[1]);
-  return { type: "choice", prompt: f[0], sub: "Que signifie vraiment ce mot ?", en: true, opts: shuffle([f[1], f[2], ...others]), ans: f[1], fix: `<b>${f[0]}</b> = ${f[1]}. ${f[3]}`, label: `${f[0]} = ${f[1]}` };
+  return { type: "choice", prompt: f[0], sub: "Que signifie vraiment ce mot ?", en: true, opts: shuffle([f[1], f[2], ...others]), ans: f[1], fix: `<b>${f[0]}</b> = ${f[1]}. ${f[3]}`, label: `${f[0]} = ${f[1]}`, why: `Faux ami : « ${f[0]} » veut dire « ${f[1]} », pas « ${f[2]} ». ${f[3]}` };
 }
 
 function genOrder() {
   const s = pick(SENT); const w = s[0].split(" "); let sh;
   do { sh = shuffle(w); } while (sh.join(" ") === s[0]);
-  return { type: "order", prompt: s[2], sub: "Reconstruis la phrase en anglais", en: false, words: sh, ans: s[0], fix: `<b>${s[0]}${s[1]}</b>`, label: s[0] + s[1], speakText: s[0] };
+  return { type: "order", prompt: s[2], sub: "Reconstruis la phrase en anglais", en: false, words: sh, ans: s[0], fix: `<b>${s[0]}${s[1]}</b>`, label: s[0] + s[1], speakText: s[0],
+    why: (s[1] === "?" ? "Question : le mot interrogatif, puis l'auxiliaire (do, does, is, have…) avant le sujet." : "Ordre de base : sujet + verbe + complément ; les mots de temps (yesterday, now) vont en fin de phrase.") + ` Sens : « ${s[2]} »` };
 }
 
 // =====================================================================
