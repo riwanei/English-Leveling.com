@@ -1,6 +1,6 @@
 // =====================================================================
 // Contenu pédagogique : données des portes et générateurs de questions.
-// Les 30 portes d'origine sont ici ; les 100 portes supplémentaires sont dans js/gates/.
+// Les 30 portes d'origine sont ici ; les portes supplémentaires (dont la prononciation) sont dans js/gates/.
 // Pour ajouter des questions, ajoute des lignes dans les listes ci-dessous.
 // Format des listes "D" :  question|bonne réponse|piège|piège…#explication
 // (___ dans la question = le trou à compléter)
@@ -12,6 +12,8 @@ import A2_MORE from "./gates/a2.js";
 import B1_MORE from "./gates/b1.js";
 import B2_MORE from "./gates/b2.js";
 import { C1 as C1_MORE, SSPLUS } from "./gates/elite.js";
+import S_MORE from "./gates/s.js";
+import SPEAK from "./gates/speak.js";
 
 // ---------- Verbes irréguliers : base|prétérit|participe|traduction ----------
 export const VERBS = `be|was/were|been|être
@@ -513,7 +515,7 @@ export const CATS = [
   { id: "B1", name: "Intermédiaire", rank: "C", desc: "Raconter, nuancer, éviter les pièges classiques." },
   { id: "B2", name: "Avancé", rank: "B", desc: "Parler comme un natif : expressions et structures fines." },
   { id: "C1", name: "Élite", rank: "A", desc: "Très difficile : 2 PV seulement, XP doublée." },
-  { id: "S", name: "Porte rouge", rank: "S", desc: "Toutes les épreuves, contre la montre." },
+  { id: "S", name: "Porte rouge", rank: "S", desc: "Parler en public en anglais (2 PV, XP ×2,5), et le Raid contre la montre." },
   { id: "SS+", name: "Monarque", rank: "SS+", desc: "Le sommet : 1 seul PV, 5 ou 6 choix piégés, XP triplée. Hors du Raid." }
 ];
 
@@ -550,9 +552,41 @@ export const GAMES = [
   { id: "boss", cat: "S", name: "Raid du Monarque", stat: "agi", desc: "75 secondes. Toutes les épreuves mélangées (sauf SS+). Pas de PV, que la vitesse.", boss: true, gen: null }
 ];
 
-// Portes supplémentaires (js/gates/) : q = questions à choix, pairs = paires "français|anglais"
-const TIERS = { C1: { hp: 2, xp: 2 }, "SS+": { hp: 1, xp: 3 } };
+// ---------- Prononciation : comparer ce que le navigateur a entendu à la phrase attendue ----------
+const CONTRACTIONS = [[/\bcan't\b/g, "can not"], [/\bwon't\b/g, "will not"], [/n't\b/g, " not"], [/'m\b/g, " am"], [/'re\b/g, " are"],
+  [/'ve\b/g, " have"], [/'ll\b/g, " will"], [/'d\b/g, " would"], [/\blet's\b/g, "let us"], [/'s\b/g, " is"]];
+// Orthographe britannique / américaine : on ramène tout à une seule forme
+const fold = w => w.replace(/isation/, "ization").replace(/is(e|ed|es|er|ers|ing)$/, "iz$1").replace(/our$/, "or").replace(/tre$/, "ter");
+export function speechWords(s) {
+  let t = String(s).toLowerCase().replace(/[’`]/g, "'");
+  CONTRACTIONS.forEach(([re, by]) => { t = t.replace(re, by); });
+  t = t.replace(/\d+/g, n => +n < 1000 ? words(+n, false) : n);
+  return t.replace(/[^a-z' ]+/g, " ").replace(/'/g, "").split(/\s+/).filter(Boolean).map(fold);
+}
+// Part des mots attendus retrouvés dans l'ordre (plus longue sous-suite commune)
+export function speechScore(target, heard) {
+  const a = speechWords(target), b = speechWords(heard);
+  if (!a.length) return 0;
+  const row = Array(b.length + 1).fill(0);
+  for (const w of a) { let prev = 0; for (let j = 1; j <= b.length; j++) { const tmp = row[j]; row[j] = w === b[j - 1] ? prev + 1 : Math.max(row[j], row[j - 1]); prev = tmp; } }
+  return row[b.length] / a.length;
+}
+function speakGen(text, need, sub) {
+  const items = parse(text);
+  return () => {
+    const it = pick(items);
+    return {
+      type: "speak", prompt: it.q, sub, en: true, speakText: it.q, need, tip: it.x, tries: 0,
+      score: heard => speechScore(it.q, heard),
+      fix: `<b>${esc(it.q)}</b><br>${esc(it.x)}`, label: it.q, why: it.x
+    };
+  };
+}
+
+// Portes supplémentaires (js/gates/) : q = questions à choix, pairs = paires "français|anglais", say = phrases à prononcer
+const TIERS = { C1: { hp: 2, xp: 2 }, S: { hp: 2, xp: 2.5 }, "SS+": { hp: 1, xp: 3 } };
 const moreGate = cat => m => {
+  if (m.say) return { id: m.id, cat, name: m.name, stat: m.stat, desc: m.desc, speak: true, ...TIERS[cat], hp: 3, gen: speakGen(m.say, m.need, m.sub) };
   if (m.q) D[m.id] = m.q;
   const gen = m.q ? choiceGen(m.id, m.sub, m.en ?? true) : pairGen(m.pairs.trim().split("\n").map(l => l.split("|")), m.sub);
   return { id: m.id, cat, name: m.name, stat: m.stat, desc: m.desc, gen, ...TIERS[cat] };
@@ -560,9 +594,10 @@ const moreGate = cat => m => {
 GAMES.splice(GAMES.findIndex(g => g.boss), 0,
   ...A1_MORE.map(moreGate("A1")), ...A2_MORE.map(moreGate("A2")), ...B1_MORE.map(moreGate("B1")),
   ...B2_MORE.map(moreGate("B2")), ...C1_MORE.map(moreGate("C1")), ...SSPLUS.map(moreGate("SS+")));
+GAMES.push(...S_MORE.map(moreGate("S")), ...SPEAK.map(m => moreGate(m.cat)(m)));
 
 export const G = Object.fromEntries(GAMES.map(g => [g.id, g]));
-G.boss.gen = () => { const g = pick(GAMES.filter(x => !x.boss && x.cat !== "SS+")); const q = g.gen(); q.from = g.name; return q; };
+G.boss.gen = () => { const g = pick(GAMES.filter(x => !x.boss && !x.speak && x.cat !== "SS+")); const q = g.gen(); q.from = g.name; return q; };
 
 export const STATNAMES = { mem: "Mémoire", lex: "Lexique", per: "Perception", syn: "Syntaxe", agi: "Agilité" };
 

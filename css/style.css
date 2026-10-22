@@ -69,6 +69,10 @@ nav button:hover,nav button:focus-visible{color:var(--ink)}
 .gate p{font-size:14px;color:var(--mute)}
 .gate.boss{border-color:var(--red);background:linear-gradient(180deg,rgba(255,90,118,.12),var(--panel))}
 .gate.boss:hover{box-shadow:0 0 22px rgba(255,90,118,.35);border-color:var(--red)}
+.say-tip{text-align:center;color:var(--gold);font-size:15px;margin:-6px 0 14px}
+.heard{text-align:center;font-size:15px;margin-bottom:12px;padding:8px 12px;border:1px dashed var(--line)}
+.heard span{display:block;color:var(--mute);margin-top:4px}
+.say-off{text-align:center;margin-top:8px}
 .cecr.elite{background:var(--mana)}
 .cecr.ss{background:linear-gradient(90deg,var(--gold),var(--mana))}
 .gate.elite{border-color:var(--mana);background:linear-gradient(180deg,rgba(138,125,255,.12),var(--panel))}
