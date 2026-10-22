@@ -89,7 +89,7 @@ function viewStatus() {
     <p class="mute small" style="margin-top:12px">Les quêtes se réinitialisent à minuit. Le Système observe.</p></section>
   <section class="win"><div class="tag">Porte conseillée</div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
-    <div style="min-width:0"><h3>${rec.name}</h3><p class="mute small">${rec.cat === "S" ? "Porte rouge" : "Niveau " + rec.cat} · ${rec.desc}</p></div>
+    <div style="min-width:0"><h3>${rec.name}</h3><p class="mute small">${rec.cat === "S" ? "Porte rouge" : rec.cat === "SS+" ? "Rang SS+" : "Niveau " + rec.cat} · ${rec.desc}</p></div>
     <button class="btn main" id="rec">Entrer</button></div></section>
   ${S.total >= 20 ? `<section class="win"><div class="tag">Ton avis compte</div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
@@ -107,12 +107,12 @@ function viewStatus() {
 
 function viewGates() {
   const v = $("#view");
-  v.innerHTML = `<p class="mute">30 portes réparties sur les niveaux du cadre européen (CECR). Commence où tu te sens à l'aise : toutes les portes sont ouvertes.</p>` +
-    CATS.map(c => `<section aria-label="${c.name}"><div class="cat-head"><span class="cecr ${c.id === "S" ? "boss" : ""}">${c.id}</span><h2>${c.name}</h2><span class="mute small">${c.id === "S" ? "" : "Portes de rang " + c.rank + " · "}${c.desc}</span></div>
+  v.innerHTML = `<p class="mute">${GAMES.length} portes réparties sur les niveaux du cadre européen (CECR), du rang E au rang SS+. Commence où tu te sens à l'aise : toutes les portes sont ouvertes.</p>` +
+    CATS.map(c => `<section aria-label="${c.name}"><div class="cat-head"><span class="cecr ${c.id === "S" ? "boss" : c.id === "SS+" ? "ss" : c.id === "C1" ? "elite" : ""}">${c.id}</span><h2>${c.name}</h2><span class="mute small">${c.id === "S" ? "" : "Portes de rang " + c.rank + " · "}${c.desc}</span></div>
     <div class="gates">${GAMES.filter(g => g.cat === c.id).map(g => {
       const b = S.best[g.id];
       const badge = g.boss ? (S.bestBoss ? "Record " + S.bestBoss : "") : b ? (b.perfect ? "★ Parfait" : "Record " + b.ok + "/10") : "";
-      return `<button class="gate ${g.boss ? "boss" : ""}" data-g="${g.id}"><span class="lv"><span>${STATNAMES[g.stat]}</span><em>${badge}</em></span><h3>${g.name}</h3><p>${g.desc}</p></button>`;
+      return `<button class="gate ${g.boss ? "boss" : g.cat === "SS+" ? "ss" : g.cat === "C1" ? "elite" : ""}" data-g="${g.id}"><span class="lv"><span>${STATNAMES[g.stat]}</span><em>${badge}</em></span><h3>${g.name}</h3><p>${g.desc}</p></button>`;
     }).join("")}</div></section>`).join("");
   v.querySelectorAll(".gate").forEach(b => b.onclick = () => start(b.dataset.g));
 }
@@ -129,7 +129,7 @@ function viewPowers() {
 // =====================================================================
 function start(id) {
   markStreak(); const g = G[id];
-  R = { g, n: 0, max: g.boss ? Infinity : 10, hp: 3, combo: 0, best: 0, ok: 0, xp: 0, errors: [], end: g.boss ? Date.now() + 75000 : null, mana: maxMana(), shield: false, dom: 0, revived: false };
+  R = { g, n: 0, max: g.boss ? Infinity : 10, hp: g.hp || 3, maxHp: g.hp || 3, combo: 0, best: 0, ok: 0, xp: 0, errors: [], end: g.boss ? Date.now() + 75000 : null, mana: maxMana(), shield: false, dom: 0, revived: false };
   next();
   if (g.boss) { clearInterval(timerId); timerId = setInterval(tick, 200); }
 }
@@ -150,12 +150,12 @@ function next() {
 function render() {
   const q = R.q, g = R.g, L = myLevel();
   const hud = `<div class="hud"><span class="tag">${g.name}</span>
-    ${g.boss ? `<span id="tsec" style="color:var(--red)">${Math.ceil((R.end - Date.now()) / 1000)} s</span>` : `<span class="mute">Vague ${R.n}/${R.max}</span><span class="hp" aria-label="${R.hp} points de vie">${"♥".repeat(R.hp)}${"♡".repeat(Math.max(0, 3 - R.hp))}</span>`}
+    ${g.boss ? `<span id="tsec" style="color:var(--red)">${Math.ceil((R.end - Date.now()) / 1000)} s</span>` : `<span class="mute">Vague ${R.n}/${R.max}</span><span class="hp" aria-label="${R.hp} points de vie">${"♥".repeat(R.hp)}${"♡".repeat(Math.max(0, R.maxHp - R.hp))}</span>`}
     <span class="combo">Combo ×${mult()}</span><span style="color:var(--gold)">+${R.xp} XP</span></div>
     ${g.boss ? `<div class="timer"><i id="tbar" style="width:${Math.min(100, (R.end - Date.now()) / 75000 * 100)}%"></i></div>` : ""}`;
   const skills = `<div class="skillbar"><div class="manabox">MP ${R.mana}/${maxMana()}<div class="bar mana"><i style="width:${R.mana / maxMana() * 100}%"></i></div></div>
     ${POWERS.filter(p => !p.passive && L >= p.lv).map(p => {
-      const off = R.mana < p.cost || R.answered || (p.id === "heal" && (g.boss || R.hp >= 3)) || (p.id === "shield" && R.shield);
+      const off = R.mana < p.cost || R.answered || (p.id === "heal" && (g.boss || R.hp >= R.maxHp)) || (p.id === "shield" && R.shield);
       return `<button class="skill" data-p="${p.id}" ${off ? "disabled" : ""} title="${esc(p.desc)}">${p.name}<span>${p.cost}</span></button>`;
     }).join("")}
     <span class="buffs">${R.shield ? "Bouclier actif " : ""}${R.dom ? "Domination ×" + R.dom : ""}</span></div>`;
@@ -214,7 +214,7 @@ function usePower(id) {
     }
   }
   if (id === "shield") R.shield = true;
-  if (id === "heal") { if (R.g.boss || R.hp >= 3) return; R.hp++; }
+  if (id === "heal") { if (R.g.boss || R.hp >= R.maxHp) return; R.hp++; }
   if (id === "dom") R.dom = 3;
   R.mana -= p.cost; S.daily.powers = (S.daily.powers || 0) + 1; save();
   toast("Compétence", `<b>${p.name}</b> activée.`, "mana");
@@ -240,7 +240,7 @@ function submit(btn) {
   const stat = R.g.boss ? "agi" : R.g.stat;
   if (ok) {
     R.combo++; R.best = Math.max(R.best, R.combo); R.ok++;
-    let gain = Math.round((R.g.boss ? 15 : 10) * mult()); if (R.dom > 0) { gain *= 2; R.dom--; }
+    let gain = Math.round((R.g.boss ? 15 : 10) * (R.g.xp || 1) * mult()); if (R.dom > 0) { gain *= 2; R.dom--; }
     R.xp += gain; R.mana = Math.min(maxMana(), R.mana + 5);
     S.stats[stat]++; S.total++; S.daily.correct++; if (q.key && S.missed[q.key]) S.missed[q.key]--;
     if ([5, 10, 20].includes(R.combo)) toast("Combo", `${R.combo} coups d'affilée. Multiplicateur ×${mult()}`);
@@ -287,7 +287,7 @@ function errorReport(errors) {
 function finish(cleared) {
   clearInterval(timerId); if (!R) return;
   const r = R; R = null; const boss = !!r.g.boss;
-  let bonus = 0; if (!boss && cleared) bonus = 50 + (r.errors.length === 0 ? 50 : 0);
+  let bonus = 0; if (!boss && cleared) bonus = (50 + (r.errors.length === 0 ? 50 : 0)) * (r.g.xp || 1);
   const total = r.xp + bonus; gainXp(total);
   S.daily.runs++;
   if (boss) { S.daily.boss++; if (r.ok > S.bestBoss) { S.bestBoss = r.ok; setTimeout(() => toast("Nouveau record", `${r.ok} ennemis vaincus au Raid.`, "gold"), 400); } }

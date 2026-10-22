@@ -1,11 +1,17 @@
 // =====================================================================
-// Contenu pédagogique : données des 30 portes et générateurs de questions.
+// Contenu pédagogique : données des portes et générateurs de questions.
+// Les 30 portes d'origine sont ici ; les 100 portes supplémentaires sont dans js/gates/.
 // Pour ajouter des questions, ajoute des lignes dans les listes ci-dessous.
 // Format des listes "D" :  question|bonne réponse|piège|piège…#explication
 // (___ dans la question = le trou à compléter)
 // =====================================================================
 import { S } from "./state.js";
 import { esc, shuffle, pick, norm, fillQ } from "./util.js";
+import A1_MORE from "./gates/a1.js";
+import A2_MORE from "./gates/a2.js";
+import B1_MORE from "./gates/b1.js";
+import B2_MORE from "./gates/b2.js";
+import { C1 as C1_MORE, SSPLUS } from "./gates/elite.js";
 
 // ---------- Verbes irréguliers : base|prétérit|participe|traduction ----------
 export const VERBS = `be|was/were|been|être
@@ -166,109 +172,109 @@ const COMPS = [["big", "bigger", "the biggest"], ["small", "smaller", "the small
 
 // ---------- Questions à choix : "question|bonne|piège…#explication" ----------
 const D = {
-tobe: `I ___ a student|am|is|are
-She ___ tired|is|am|are
-They ___ at home|are|is|am
-We ___ two cats|have|has|are
-He ___ a new car|has|have|is
-It ___ cold today|is|are|has
-You ___ my best friend|are|is|am
+tobe: `I ___ a student|am|is|are#I → am.
+She ___ tired|is|am|are#he/she/it → is.
+They ___ at home|are|is|am#we/you/they → are.
+We ___ two cats|have|has|are#Posséder = have ; we → have.
+He ___ a new car|has|have|is#Posséder = have ; he/she/it → has.
+It ___ cold today|is|are|has#Météo : it is + adjectif (il fait froid = it is cold).
+You ___ my best friend|are|is|am#you → are, au singulier comme au pluriel.
 My brother ___ 20 years old|is|has|have#En anglais, on « est » un âge : he is 20.
 I ___ hungry|am|have|has#J'ai faim = I am hungry.
-The children ___ in the garden|are|is|am
-Paul and Lisa ___ a big house|have|has|are
-___ you French?|Are|Is|Have
-She ___ got blue eyes|has|have|is
+The children ___ in the garden|are|is|am#children est un pluriel → are.
+Paul and Lisa ___ a big house|have|has|are#Paul and Lisa = they → have.
+___ you French?|Are|Is|Have#Nationalité → be ; en question, on inverse : Are you… ?
+She ___ got blue eyes|has|have|is#have got : he/she/it → has got.
 I ___ cold|am|have|has#J'ai froid = I am cold.
-There ___ three apples on the table|are|is|have`,
-pron: `___ is my sister. (Marie)|She|He|It|They
-This is Tom and ___ dog.|his|her|its|their
+There ___ three apples on the table|are|is|have#Nom au pluriel → there are.`,
+pron: `___ is my sister. (Marie)|She|He|It|They#Marie est une fille et le sujet de la phrase → she.
+This is Tom and ___ dog.|his|her|its|their#Le possessif s'accorde avec le possesseur : Tom → his.
 Lisa loves ___ cat.|her|his|its|their#Le possessif s'accorde avec le possesseur : Lisa → her.
 The dog is eating ___ food.|its|it's|his|their#its = son (possessif). it's = it is.
-My parents? I call ___ every day.|them|they|their|theirs
-Can you help ___? (moi)|me|I|my|mine
-This book is ___. (à moi)|mine|my|me|I
-We love ___ new house.|our|us|we|ours
-Give ___ the key. (à lui)|him|he|his|her
-___ are late! (vous)|You|Your|Yours|Yourself
+My parents? I call ___ every day.|them|they|their|theirs#Complément au pluriel (après le verbe) → them.
+Can you help ___? (moi)|me|I|my|mine#« Moi » complément, après le verbe → me.
+This book is ___. (à moi)|mine|my|me|I#« À moi », sans nom derrière → mine.
+We love ___ new house.|our|us|we|ours#Possessif devant un nom : we → our.
+Give ___ the key. (à lui)|him|he|his|her#« Lui » complément, masculin → him.
+___ are late! (vous)|You|Your|Yours|Yourself#« Vous » sujet → you.
 The students and ___ teacher.|their|there|they're|them#their = leur. there = là. they're = they are.
 Is this ___ phone? (ton)|your|you're|yours|you#you're = you are.`,
-prep: `I was born ___ 2004|in|on|at
+prep: `I was born ___ 2004|in|on|at#Année → in.
 See you ___ Monday|on|in|at#Jours de la semaine → on.
 The meeting is ___ 3 pm|at|in|on#Heure précise → at.
-I live ___ Lyon|in|at|on
+I live ___ Lyon|in|at|on#Ville ou pays → in.
 My birthday is ___ May|in|on|at#Mois → in.
-The keys are ___ the table|on|in|at
-She is ___ home|at|in|on
-We go skiing ___ winter|in|on|at
+The keys are ___ the table|on|in|at#Sur une surface → on.
+She is ___ home|at|in|on#On dit toujours at home.
+We go skiing ___ winter|in|on|at#Saison → in.
 My birthday is ___ 14th July|on|in|at#Date précise → on.
 He's ___ the bus|on|in|at#On dit on the bus, on the train, mais in a car.
-She's waiting ___ the car|in|on|at
-I work ___ night|at|in|on
+She's waiting ___ the car|in|on|at#On dit in the car (mais on the bus).
+I work ___ night|at|in|on#On dit at night (mais in the morning).
 It depends ___ the weather|on|of|at#depend on, jamais « depend of ».
-I'm interested ___ music|in|by|on
-Listen ___ me!|to|at|for
-Wait ___ me!|for|to|at
-I'm good ___ maths|at|in|on`,
+I'm interested ___ music|in|by|on#interested in, toujours.
+Listen ___ me!|to|at|for#listen to + quelqu'un ou quelque chose.
+Wait ___ me!|for|to|at#wait for = attendre quelqu'un ou quelque chose.
+I'm good ___ maths|at|in|on#good at = doué en.`,
 simple: `She usually ___ to work by bus|goes|is going|go#usually → habitude → présent simple.
-Look! It ___|is raining|rains|rain
-I ___ coffee every morning|drink|am drinking|drinks
-Be quiet, the baby ___|is sleeping|sleeps|sleep
+Look! It ___|is raining|rains|rain#Look! → action en cours → présent continu.
+I ___ coffee every morning|drink|am drinking|drinks#every morning → habitude → présent simple.
+Be quiet, the baby ___|is sleeping|sleeps|sleep#Action en train de se passer → présent continu.
 Water ___ at 100 degrees|boils|is boiling|boil#Vérité générale → présent simple.
-What ___ right now?|are you doing|do you do|you do
-He ___ football on Saturdays|plays|is playing|play
+What ___ right now?|are you doing|do you do|you do#right now → présent continu.
+He ___ football on Saturdays|plays|is playing|play#on Saturdays → habitude → présent simple (+ -s avec he).
 I ___ you are right|think|am thinking|thinks#Verbes d'opinion (think, know, like) : rarement en -ing.
-They ___ a film at the moment|are watching|watch|watches
-I ___ French and English|speak|am speaking|speaks
-Listen! Someone ___ at the door|is knocking|knocks|knock
-She ___ chocolate|loves|is loving|love`,
-questions: `___ you like pizza?|Do|Does|Did|Are
-___ she work here?|Does|Do|Is|Did
-___ you go out last night?|Did|Do|Does|Were
+They ___ a film at the moment|are watching|watch|watches#at the moment → présent continu.
+I ___ French and English|speak|am speaking|speaks#Fait permanent → présent simple.
+Listen! Someone ___ at the door|is knocking|knocks|knock#Listen! → action en cours → présent continu.
+She ___ chocolate|loves|is loving|love#love est un verbe d'état : pas de -ing ; she → loves.`,
+questions: `___ you like pizza?|Do|Does|Did|Are#Question au présent avec I/you/we/they → do.
+___ she work here?|Does|Do|Is|Did#he/she/it → does.
+___ you go out last night?|Did|Do|Does|Were#last night → passé → did.
 Where ___ he live?|does|do|is|did#he/she/it → does.
-What time ___ the film start?|does|do|is|are
-___ they play tennis yesterday?|Did|Do|Does|Were
-How ___ you spell your name?|do|does|are|is
+What time ___ the film start?|does|do|is|are#the film = it → does.
+___ they play tennis yesterday?|Did|Do|Does|Were#yesterday → passé → did.
+How ___ you spell your name?|do|does|are|is#you + verbe d'action au présent → do.
 Why ___ you crying?|are|do|does|did#Avec -ing on utilise be : are you crying.
-___ it rain a lot in London?|Does|Do|Is|Are
-What ___ you do last weekend?|did|do|does|were`,
+___ it rain a lot in London?|Does|Do|Is|Are#it + verbe d'action (rain) → does.
+What ___ you do last weekend?|did|do|does|were#last weekend → passé → did.`,
 quant: `I don't have ___ money|any|some|many#Négation → any.
-There are ___ apples on the table|some|any|much
+There are ___ apples on the table|some|any|much#Phrase affirmative → some.
 How ___ sugar do you want?|much|many|any#sugar est indénombrable → much.
 How ___ brothers do you have?|many|much|any#brothers est dénombrable → many.
 Would you like ___ tea?|some|any|many#Offre polie → some, même dans une question.
-I haven't got ___ friends here|many|much|some
-There isn't ___ milk left|much|many|some
-Is there ___ bread?|any|some|many
-We need ___ eggs|some|any|much
-There are too ___ people here|many|much|any
-I don't have ___ time|much|many|some`,
-spell: `nécessaire|necessary|neccessary|necesary|neccesary
-une adresse|address|adress|addres|adresse
-recevoir|receive|recieve|receeve|resieve
-demain|tomorrow|tommorow|tomorow|tommorrow
-les affaires (business)|business|buisness|bussiness|busness
-différent|different|diferent|diffrent|differant
-l'environnement|environment|enviroment|environement|envirenment
-le gouvernement|government|goverment|governement|governmant
-bizarre|weird|wierd|weard|wird
-mercredi|Wednesday|Wensday|Wednsday|Wendesday
-février|February|Febuary|Februery|Febrary
-un ami|friend|freind|frend|friand
-jusqu'à|until|untill|untile|antil
-beau, belle|beautiful|beatiful|beautifull|beutiful
-la connaissance|knowledge|knowlege|knoledge|knowladge
-probablement|probably|probabaly|probaly|propably`,
+I haven't got ___ friends here|many|much|some#friends est dénombrable → many.
+There isn't ___ milk left|much|many|some#milk est indénombrable → much.
+Is there ___ bread?|any|some|many#Question (qui n'est pas une offre) → any.
+We need ___ eggs|some|any|much#Phrase affirmative → some.
+There are too ___ people here|many|much|any#people est dénombrable → too many.
+I don't have ___ time|much|many|some#time est indénombrable → much.`,
+spell: `nécessaire|necessary|neccessary|necesary|neccesary#Un c, deux s : ne-c-e-ss-ary.
+une adresse|address|adress|addres|adresse#Deux d et deux s : a-dd-re-ss.
+recevoir|receive|recieve|receeve|resieve#« i avant e, sauf après c » : rec-ei-ve.
+demain|tomorrow|tommorow|tomorow|tommorrow#Un m, deux r : to-m-o-rr-ow.
+les affaires (business)|business|buisness|bussiness|busness#busy + ness : busi-ness.
+différent|different|diferent|diffrent|differant#Deux f, et -ent à la fin : di-ff-er-ent.
+l'environnement|environment|enviroment|environement|envirenment#environ + ment : n'oublie pas le n.
+le gouvernement|government|goverment|governement|governmant#govern + ment : le n reste.
+bizarre|weird|wierd|weard|wird#Exception à la règle : e avant i dans w-ei-rd.
+mercredi|Wednesday|Wensday|Wednsday|Wendesday#Le premier d est muet mais s'écrit : Wed-nes-day.
+février|February|Febuary|Februery|Febrary#On oublie souvent le premier r : Feb-ru-ary.
+un ami|friend|freind|frend|friand#fri + end : la fin du mot, c'est end.
+jusqu'à|until|untill|untile|antil#Un seul l à la fin (mais till en prend deux).
+beau, belle|beautiful|beatiful|beautifull|beutiful#beau + ti + ful : -ful ne prend qu'un l.
+la connaissance|knowledge|knowlege|knoledge|knowladge#know + ledge : k muet et d avant ge.
+probablement|probably|probabaly|probaly|propably#probab + ly : deux b.`,
 perfect: `I ___ to Spain last year|went|have been|have gone#last year → moment terminé et daté → prétérit.
 I ___ sushi. (jamais de ma vie)|have never eaten|never ate|didn't eat#Expérience de vie → present perfect + never.
 She ___ here since 2020|has lived|lived|lives#since + durée qui continue → present perfect.
-We ___ the film yesterday|saw|have seen|have saw
-___ to New York?|Have you ever been|Did you ever go|Were you ever
+We ___ the film yesterday|saw|have seen|have saw#yesterday → moment passé et daté → prétérit.
+___ to New York?|Have you ever been|Did you ever go|Were you ever#ever → expérience de vie → present perfect.
 I ___ my keys! I can't find them|have lost|lost|lose#Conséquence visible maintenant → present perfect.
 Shakespeare ___ many plays|wrote|has written|has wrote#Personne décédée → action terminée → prétérit.
 I ___ him for ten years|have known|knew|know#for + durée qui continue → present perfect.
 When ___ you arrive?|did|have|has#When → moment précis → prétérit.
-He ___ the room. (vient de)|has just left|just leaves|is just left
+He ___ the room. (vient de)|has just left|just leaves|is just left#Venir de = have/has just + participe passé.
 I ___ three coffees today|have had|had|have#today n'est pas fini → present perfect.`,
 modals: `You ___ wear a seatbelt. It's the law|must|might|could#Obligation forte → must.
 You ___ see a doctor, you look ill|should|mustn't|can't#Conseil → should.
@@ -276,7 +282,7 @@ I ___ swim when I was five|could|can|must#Capacité dans le passé → could.
 It ___ rain later, take an umbrella|might|must|should#Possibilité → might.
 You ___ smoke here. It's forbidden|mustn't|don't have to|shouldn't#mustn't = interdiction.
 You ___ come if you don't want to|don't have to|mustn't|can't#don't have to = pas obligé.
-___ I open the window?|Can|Do|Am|Have
+___ I open the window?|Can|Do|Am|Have#Demander la permission → Can I… ?
 She ___ be at home, her car is outside|must|can|should#Déduction presque certaine → must.
 He ___ be French, he doesn't speak a word of it|can't|mustn't|doesn't have to#Déduction négative → can't.
 We ___ leave now, the train is at 6|have to|has to|must to#must n'est jamais suivi de to.`,
@@ -284,83 +290,83 @@ cond: `If it rains, I ___ at home|will stay|would stay|stayed#Condition réelle 
 If I ___ rich, I would buy a house|were|am|will be#Hypothèse : if + prétérit (were), would + verbe.
 If you heat ice, it ___|melts|would melt|melted#Vérité générale : présent + présent.
 If I had known, I ___ you|would have told|would tell|will tell#Regret : if + past perfect, would have + participe passé.
-I would call her if I ___ her number|had|have|would have
+I would call her if I ___ her number|had|have|would have#would dans l'autre partie → if + prétérit.
 If she ___ harder, she will pass|works|will work|would work#Jamais de will juste après if.
-What would you do if you ___ the lottery?|won|win|will win
-If we ___ earlier, we wouldn't have missed the train|had left|left|would leave
-Unless you hurry, you ___ late|will be|would be|are`,
+What would you do if you ___ the lottery?|won|win|will win#Hypothèse : if + prétérit (won), would + verbe.
+If we ___ earlier, we wouldn't have missed the train|had left|left|would leave#Passé imaginaire : if + past perfect, would have + participe passé.
+Unless you hurry, you ___ late|will be|would be|are#unless = if not : condition réelle → will.`,
 trad: `J'ai 22 ans|I am 22 years old|I have 22 years|I have 22 years old#L'âge se dit avec be.
-Je suis d'accord|I agree|I am agree|I am agreed
-Il fait froid|It is cold|It makes cold|He is cold
+Je suis d'accord|I agree|I am agree|I am agreed#agree est un verbe : I agree, jamais « I am agree ».
+Il fait froid|It is cold|It makes cold|He is cold#Météo : it is + adjectif, jamais « it makes ».
 J'habite ici depuis 3 ans|I have lived here for 3 years|I live here since 3 years|I am living here since 3 years#depuis + durée → present perfect + for.
-Ça dépend|It depends|It's depend|It depends of
-Il y a deux heures|Two hours ago|There is two hours|Since two hours
-Je vais au travail en voiture|I drive to work|I go to work in car|I go at work by car
+Ça dépend|It depends|It's depend|It depends of#It depends (on), jamais « depends of ».
+Il y a deux heures|Two hours ago|There is two hours|Since two hours#« Il y a » (dans le passé) = durée + ago.
+Je vais au travail en voiture|I drive to work|I go to work in car|I go at work by car#Aller en voiture = drive ; on dit go to work, jamais « at work ».
 Je n'ai rien fait|I didn't do anything|I didn't do nothing|I have do nothing#Pas de double négation en anglais.
-Explique-le-moi|Explain it to me|Explain me it|Explain me
+Explique-le-moi|Explain it to me|Explain me it|Explain me#explain something to someone : explain it to me.
 Les informations sont utiles|The information is useful|The informations are useful|The information are useful#information est indénombrable : jamais de -s.
-Je cherche un travail|I'm looking for a job|I'm searching a work|I look a job
-Il est en train de manger|He is eating|He is in train to eat|He eats now
-Ça fait longtemps !|Long time no see!|It makes long time!|It's long time!`,
-idioms: `It's a piece of cake|C'est très facile|C'est délicieux|C'est un cadeau
-Break a leg!|Bonne chance !|Fais attention !|Repose-toi
-It's raining cats and dogs|Il pleut à verse|Il y a beaucoup d'animaux|Il pleut un peu
-It costs an arm and a leg|Ça coûte les yeux de la tête|Ça fait mal|Ça ne coûte rien
-Once in a blue moon|Très rarement|La nuit|Chaque mois
-To hit the books|Réviser sérieusement|Jeter ses livres|Écrire un livre
-To feel under the weather|Être un peu malade|Avoir froid|Être triste à cause de la pluie
-Let's call it a day|Arrêtons-nous pour aujourd'hui|Téléphonons|Commençons la journée
-To beat around the bush|Tourner autour du pot|Jardiner|Se battre
-The ball is in your court|C'est à toi de décider|Tu as perdu|Va chercher la balle
-To spill the beans|Vendre la mèche|Rater une recette|Faire une erreur
-To be on cloud nine|Être aux anges|Être distrait|Voyager en avion
-No pain, no gain|On n'a rien sans effort|N'aie pas mal|Ne force pas
-To get cold feet|Se dégonfler au dernier moment|Avoir froid aux pieds|Tomber malade
-To kill two birds with one stone|Faire d'une pierre deux coups|Aller à la chasse|Être cruel`,
-passive: `The house ___ in 1990|was built|built|is building|has build
-English ___ all over the world|is spoken|speaks|is speaking|spoken
-My bike ___ yesterday|was stolen|stole|has stolen|is stolen
-The letters ___ tomorrow|will be sent|will send|are sent|sent
-This song ___ by Adele|was written|wrote|is writing|has written
-The room ___ every day|is cleaned|cleans|cleaned|is cleaning
+Je cherche un travail|I'm looking for a job|I'm searching a work|I look a job#chercher = look for ; un travail (un poste) = a job.
+Il est en train de manger|He is eating|He is in train to eat|He eats now#être en train de → présent continu : he is eating.
+Ça fait longtemps !|Long time no see!|It makes long time!|It's long time!#Expression figée pour des retrouvailles : Long time no see!`,
+idioms: `It's a piece of cake|C'est très facile|C'est délicieux|C'est un cadeau#« Un morceau de gâteau » : aussi facile à avaler.
+Break a leg!|Bonne chance !|Fais attention !|Repose-toi#Se dit aux artistes avant d'entrer en scène.
+It's raining cats and dogs|Il pleut à verse|Il y a beaucoup d'animaux|Il pleut un peu#« Il pleut des chats et des chiens » : il pleut des cordes.
+It costs an arm and a leg|Ça coûte les yeux de la tête|Ça fait mal|Ça ne coûte rien#Payer « un bras et une jambe » = très cher.
+Once in a blue moon|Très rarement|La nuit|Chaque mois#Une « lune bleue » est rare : ça n'arrive presque jamais.
+To hit the books|Réviser sérieusement|Jeter ses livres|Écrire un livre#« Frapper les livres » = s'y mettre à fond, bûcher.
+To feel under the weather|Être un peu malade|Avoir froid|Être triste à cause de la pluie#« Sous la météo » = pas en forme.
+Let's call it a day|Arrêtons-nous pour aujourd'hui|Téléphonons|Commençons la journée#« Appelons ça une journée » : la journée est finie.
+To beat around the bush|Tourner autour du pot|Jardiner|Se battre#« Battre autour du buisson » = éviter le sujet.
+The ball is in your court|C'est à toi de décider|Tu as perdu|Va chercher la balle#Image du tennis : la balle est dans ton camp.
+To spill the beans|Vendre la mèche|Rater une recette|Faire une erreur#« Renverser les haricots » = révéler un secret.
+To be on cloud nine|Être aux anges|Être distrait|Voyager en avion#« Sur le nuage numéro neuf » = fou de joie.
+No pain, no gain|On n'a rien sans effort|N'aie pas mal|Ne force pas#Pas de douleur, pas de progrès : l'effort paie.
+To get cold feet|Se dégonfler au dernier moment|Avoir froid aux pieds|Tomber malade#« Avoir les pieds froids » = avoir peur au dernier moment.
+To kill two birds with one stone|Faire d'une pierre deux coups|Aller à la chasse|Être cruel#« Tuer deux oiseaux avec une pierre » : même image qu'en français.`,
+passive: `The house ___ in 1990|was built|built|is building|has build#Passif au passé : was/were + participe passé.
+English ___ all over the world|is spoken|speaks|is speaking|spoken#Passif au présent : is/are + participe passé.
+My bike ___ yesterday|was stolen|stole|has stolen|is stolen#yesterday → passif au prétérit : was + participe passé.
+The letters ___ tomorrow|will be sent|will send|are sent|sent#Passif au futur : will be + participe passé.
+This song ___ by Adele|was written|wrote|is writing|has written#by + auteur → passif : was + participe passé.
+The room ___ every day|is cleaned|cleans|cleaned|is cleaning#Habitude au passif : is + participe passé.
 A new bridge ___ at the moment|is being built|is building|builds|is built#En cours → is being + participe passé.
-Many mistakes ___ last year|were made|made|were making|have made
-The results ___ next week|will be published|will publish|are publishing|published`,
+Many mistakes ___ last year|were made|made|were making|have made#Sujet au pluriel, au passé → were + participe passé.
+The results ___ next week|will be published|will publish|are publishing|published#Passif au futur : will be + participe passé.`,
 reported: `He said: "I am tired." → He said he ___ tired|was|is|were|has been#Au discours indirect, on recule d'un temps : am → was.
 She said: "I will call you." → She said she ___ call me|would|will|can|should#will → would.
 He said: "I can swim." → He said he ___ swim|could|can|may|will#can → could.
 She said: "I have finished." → She said she ___ finished|had|has|have|was#present perfect → past perfect.
 "Where do you live?" → He asked me where I ___|lived|live|did live|do live#Pas d'inversion ni de do dans la question indirecte.
-"Close the door." → She told me ___ the door|to close|close|closing|that I close
-"Don't be late." → He told us ___ late|not to be|to not being|don't be|we not be
-She said: "I saw him." → She said she ___ him|had seen|has seen|saw|sees
-"Are you ready?" → He asked if I ___ ready|was|am|did|were being`,
-colloc: `___ a mistake|make|do|take
-___ your homework|do|make|give
-___ a decision|make|do|give
-___ the shopping|do|make|give
-___ a phone call|make|do|give
-___ your best|do|make|give
+"Close the door." → She told me ___ the door|to close|close|closing|that I close#Ordre au discours indirect : tell someone to + verbe.
+"Don't be late." → He told us ___ late|not to be|to not being|don't be|we not be#Ordre négatif : tell someone not to + verbe.
+She said: "I saw him." → She said she ___ him|had seen|has seen|saw|sees#Au discours indirect, prétérit → past perfect.
+"Are you ready?" → He asked if I ___ ready|was|am|did|were being#On recule d'un temps : are → was (avec I).`,
+colloc: `___ a mistake|make|do|take#make a mistake = faire une erreur.
+___ your homework|do|make|give#do pour les tâches : do your homework.
+___ a decision|make|do|give#make a decision = prendre une décision.
+___ the shopping|do|make|give#do pour les tâches : do the shopping.
+___ a phone call|make|do|give#make a phone call = passer un appel.
+___ your best|do|make|give#do your best = faire de son mieux.
 ___ money|make|do|give#make money = gagner de l'argent.
-___ the dishes|do|make|give
-___ friends|make|do|give
-___ exercise|do|make|give
-___ a noise|make|do|give
-___ business|do|make|give
-___ an effort|make|do|give
-___ someone a favour|do|make|give
-___ progress|make|do|give
+___ the dishes|do|make|give#do pour les tâches : do the dishes = faire la vaisselle.
+___ friends|make|do|give#make friends = se faire des amis.
+___ exercise|do|make|give#do pour les activités : do exercise = faire du sport.
+___ a noise|make|do|give#make a noise = faire du bruit.
+___ business|do|make|give#do business = faire des affaires.
+___ an effort|make|do|give#make an effort = faire un effort.
+___ someone a favour|do|make|give#do someone a favour = rendre service à quelqu'un.
+___ progress|make|do|give#make progress = progresser.
 ___ a photo|take|make|do#Prendre une photo = take a photo.`,
 linking: `___ it was raining, we went out|Although|Despite|However|Because#although + phrase complète.
 ___ the rain, we went out|Despite|Although|However|Even#despite + nom (jamais + phrase).
-It was expensive. ___, I bought it|However|Although|Despite|Because
-I stayed home ___ I was sick|because|although|however|despite
-She studied hard; ___, she passed|therefore|however|although|despite
-I like tea, ___ my sister prefers coffee|whereas|despite|therefore|unless
+It was expensive. ___, I bought it|However|Although|Despite|Because#However, en début de phrase + virgule = cependant.
+I stayed home ___ I was sick|because|although|however|despite#because = parce que (cause).
+She studied hard; ___, she passed|therefore|however|although|despite#therefore = donc (conséquence).
+I like tea, ___ my sister prefers coffee|whereas|despite|therefore|unless#whereas = alors que (contraste entre deux faits).
 You won't pass ___ you study|unless|despite|whereas|although#unless = à moins que, sauf si.
-___ being tired, he kept running|Despite|Although|However|Even
-He's rich. ___, he's not happy|Nevertheless|Because|Unless|Despite
-Take an umbrella ___ it rains|in case|despite|whereas|however`
+___ being tired, he kept running|Despite|Although|However|Even#despite + nom ou verbe en -ing.
+He's rich. ___, he's not happy|Nevertheless|Because|Unless|Despite#Nevertheless = néanmoins, en début de phrase.
+Take an umbrella ___ it rains|in case|despite|whereas|however#in case = au cas où.`
 };
 
 // =====================================================================
@@ -506,7 +512,9 @@ export const CATS = [
   { id: "A2", name: "Élémentaire", rank: "D", desc: "Le quotidien, les premières règles de grammaire." },
   { id: "B1", name: "Intermédiaire", rank: "C", desc: "Raconter, nuancer, éviter les pièges classiques." },
   { id: "B2", name: "Avancé", rank: "B", desc: "Parler comme un natif : expressions et structures fines." },
-  { id: "S", name: "Porte rouge", rank: "S", desc: "Toutes les épreuves, contre la montre." }
+  { id: "C1", name: "Élite", rank: "A", desc: "Très difficile : 2 PV seulement, XP doublée." },
+  { id: "S", name: "Porte rouge", rank: "S", desc: "Toutes les épreuves, contre la montre." },
+  { id: "SS+", name: "Monarque", rank: "SS+", desc: "Le sommet : 1 seul PV, 5 ou 6 choix piégés, XP triplée. Hors du Raid." }
 ];
 
 export const GAMES = [
@@ -539,11 +547,22 @@ export const GAMES = [
   { id: "reported", cat: "B2", name: "Échos du Discours Indirect", stat: "syn", desc: "Rapporter ce que quelqu'un a dit.", gen: choiceGen("reported", "Complète le discours indirect") },
   { id: "colloc", cat: "B2", name: "Forge Make & Do", stat: "lex", desc: "Make a mistake, do your homework…", gen: choiceGen("colloc", "Quel verbe va avec ?") },
   { id: "linking", cat: "B2", name: "Pont des Connecteurs", stat: "syn", desc: "Although, despite, however, unless…", gen: choiceGen("linking", "Choisis le bon connecteur") },
-  { id: "boss", cat: "S", name: "Raid du Monarque", stat: "agi", desc: "75 secondes. Les 29 épreuves mélangées. Pas de PV, que la vitesse.", boss: true, gen: null }
+  { id: "boss", cat: "S", name: "Raid du Monarque", stat: "agi", desc: "75 secondes. Toutes les épreuves mélangées (sauf SS+). Pas de PV, que la vitesse.", boss: true, gen: null }
 ];
 
+// Portes supplémentaires (js/gates/) : q = questions à choix, pairs = paires "français|anglais"
+const TIERS = { C1: { hp: 2, xp: 2 }, "SS+": { hp: 1, xp: 3 } };
+const moreGate = cat => m => {
+  if (m.q) D[m.id] = m.q;
+  const gen = m.q ? choiceGen(m.id, m.sub, m.en ?? true) : pairGen(m.pairs.trim().split("\n").map(l => l.split("|")), m.sub);
+  return { id: m.id, cat, name: m.name, stat: m.stat, desc: m.desc, gen, ...TIERS[cat] };
+};
+GAMES.splice(GAMES.findIndex(g => g.boss), 0,
+  ...A1_MORE.map(moreGate("A1")), ...A2_MORE.map(moreGate("A2")), ...B1_MORE.map(moreGate("B1")),
+  ...B2_MORE.map(moreGate("B2")), ...C1_MORE.map(moreGate("C1")), ...SSPLUS.map(moreGate("SS+")));
+
 export const G = Object.fromEntries(GAMES.map(g => [g.id, g]));
-G.boss.gen = () => { const g = pick(GAMES.filter(x => !x.boss)); const q = g.gen(); q.from = g.name; return q; };
+G.boss.gen = () => { const g = pick(GAMES.filter(x => !x.boss && x.cat !== "SS+")); const q = g.gen(); q.from = g.name; return q; };
 
 export const STATNAMES = { mem: "Mémoire", lex: "Lexique", per: "Perception", syn: "Syntaxe", agi: "Agilité" };
 

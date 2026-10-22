@@ -229,7 +229,7 @@ export function renderGuild(box) {
 }
 
 function gateMessage() {
-  if (!cloud.configured) return `<section class="win"><div class="tag">Guildes</div><p style="margin-top:8px">Le mode en ligne n'est pas encore activé sur ce site.</p><p class="mute small" style="margin-top:6px">Les 30 donjons fonctionnent quand même : ta progression est gardée dans ce navigateur.</p></section>`;
+  if (!cloud.configured) return `<section class="win"><div class="tag">Guildes</div><p style="margin-top:8px">Le mode en ligne n'est pas encore activé sur ce site.</p><p class="mute small" style="margin-top:6px">Tous les donjons fonctionnent quand même : ta progression est gardée dans ce navigateur.</p></section>`;
   if (cloud.status === "loading") return `<section class="win"><p class="mute">Connexion au registre des guildes…</p></section>`;
   if (cloud.status === "error") return `<section class="win"><div class="tag">Guildes</div><p style="margin-top:8px">Impossible de joindre le serveur pour le moment.</p><p class="mute small" style="margin-top:6px">Vérifie ta connexion puis recharge la page. Les donjons restent jouables.</p></section>`;
   if (!cloud.session) return `<section class="win"><div class="tag">Guildes</div><p style="margin-top:8px">Connecte-toi pour créer une guilde ou rejoindre celle de tes amis (7 chasseurs maximum).</p><div class="actions left"><button class="btn main" data-goto="account">Se connecter ou créer un compte</button></div></section>`;

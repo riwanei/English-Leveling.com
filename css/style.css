@@ -69,6 +69,13 @@ nav button:hover,nav button:focus-visible{color:var(--ink)}
 .gate p{font-size:14px;color:var(--mute)}
 .gate.boss{border-color:var(--red);background:linear-gradient(180deg,rgba(255,90,118,.12),var(--panel))}
 .gate.boss:hover{box-shadow:0 0 22px rgba(255,90,118,.35);border-color:var(--red)}
+.cecr.elite{background:var(--mana)}
+.cecr.ss{background:linear-gradient(90deg,var(--gold),var(--mana))}
+.gate.elite{border-color:var(--mana);background:linear-gradient(180deg,rgba(138,125,255,.12),var(--panel))}
+.gate.elite:hover{box-shadow:0 0 22px rgba(138,125,255,.35);border-color:var(--mana)}
+.gate.ss{border-color:var(--gold);background:linear-gradient(180deg,rgba(255,203,92,.14),rgba(138,125,255,.1) 60%,var(--panel))}
+.gate.ss h3{color:var(--gold)}
+.gate.ss:hover{box-shadow:0 0 26px rgba(255,203,92,.4);border-color:var(--gold)}
 .powers{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .power{border:1px solid var(--line);background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:4px}
 .power.locked{opacity:.5}
