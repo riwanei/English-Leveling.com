@@ -5,6 +5,7 @@ import { $, esc, shuffle, pick, norm, lvl, rank, toast, today } from "./util.js"
 import { S, save, fresh, replaceState, checkDay } from "./state.js";
 import { CATS, GAMES, G, STATNAMES, QUESTS, POWERS } from "./content.js";
 import { play, introSeen } from "./cinema.js";
+import { viewChamber, inRoom } from "./chamber.js";
 import { cloud, initCloud, renderGuild, renderAccount, renderReviews, pushProgress, announceLevel } from "./cloud.js";
 
 const app = $("#app");
@@ -82,7 +83,7 @@ function heardSpeech(q, text, score) {
 // =====================================================================
 // ONGLETS
 // =====================================================================
-const TABS = [["status", "Statut"], ["gates", "Portes"], ["powers", "Pouvoirs"], ["guild", "Guilde"], ["reviews", "Avis"], ["account", "Compte"]];
+const TABS = [["status", "Statut"], ["gates", "Portes"], ["powers", "Pouvoirs"], ["guild", "Guilde"], ["chamber", "Chambre"], ["reviews", "Avis"], ["account", "Compte"]];
 let R = null, timerId = null;
 
 function shell() {
@@ -104,7 +105,7 @@ function shell() {
   app.querySelectorAll("nav button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); shell(); });
   $("#accbtn").onclick = () => { S.tab = "account"; save(); shell(); };
   const v = $("#view");
-  ({ status: viewStatus, gates: viewGates, powers: viewPowers, guild: () => renderGuild(v), reviews: () => renderReviews(v), account: () => renderAccount(v) })[S.tab]();
+  ({ status: viewStatus, gates: viewGates, powers: viewPowers, guild: () => renderGuild(v), chamber: () => viewChamber(v, { gainXp, progressQuests, pushProgress, shell }), reviews: () => renderReviews(v), account: () => renderAccount(v) })[S.tab]();
 }
 
 function viewStatus() {
@@ -365,17 +366,17 @@ document.addEventListener("keydown", e => {
 shell();
 // Quand l'état du compte ou des guildes change, on rafraîchit l'écran (sauf en plein donjon)
 initCloud(({ full }) => {
-  if (R) return;
+  if (R || inRoom()) return;
   if (full || S.tab === "account" || S.tab === "status" || S.tab === "reviews") shell();
   else if (S.tab === "guild") renderGuild($("#view"));
 });
 if (!introSeen()) setTimeout(() => play("awaken"), 300);
 
 // Annonce de mise à jour, une seule fois par appareil (pas pour un nouveau joueur, qui découvre tout)
-const MAJ = "speak-1", MAJ_KEY = "english-leveling-maj";
+const MAJ = "chambre-1", MAJ_KEY = "english-leveling-maj";
 try {
   if (localStorage.getItem(MAJ_KEY) !== MAJ) {
-    if (introSeen()) setTimeout(() => toast("Mise à jour du Système", "Nouvelles portes : parle anglais au micro à chaque niveau pour travailler ta prononciation, et 5 portes de rang S sur la prise de parole en public."), 900);
+    if (introSeen()) setTimeout(() => toast("Mise à jour du Système", "Une porte scellée est apparue : la <b>Chambre Hors du Temps</b> (onglet Chambre). Écoute, lecture, dictée et traduction, avec deux fois plus d'XP."), 900);
     localStorage.setItem(MAJ_KEY, MAJ);
   }
 } catch (e) { /* stockage indisponible */ }

@@ -71,6 +71,21 @@ function scene(id, d) {
       <div class="c-big">Niveau ${esc(d.level)}</div>
       <p class="c-line mute" style="animation-delay:700ms">${LEVEL_LINES[d.level % LEVEL_LINES.length]}</p>`
   };
+  if (id === "chamber-in") return {
+    c: "#eaf2ff", ms: 6200, whiteout: true,
+    svg: `${ground}<polygon class="c-beam" points="350,384 450,384 640,450 160,450"/><rect class="c-door" x="350" y="110" width="100" height="274"/>${particles(30)}${hunter(400, 446, .78)}`,
+    text: `<div class="tag">[ Changement d'univers ]</div>
+      <p class="c-line" style="animation-delay:600ms">Une porte scellée s'ouvre devant vous.</p>
+      <p class="c-line mute" style="animation-delay:1900ms">Derrière : un monde blanc et sans fin. Une journée dehors y dure une année.</p>
+      <p class="c-line" style="animation-delay:3300ms">Entraînez-vous jusqu'à vos limites.</p>`
+  };
+  if (id === "chamber-out") return {
+    c: "var(--glow)", ms: 4400,
+    svg: `${ground}${particles(24)}${hunter(400, 384, 1.05)}`,
+    text: `<div class="tag">[ Retour au monde réel ]</div>
+      <p class="c-line" style="animation-delay:500ms">Vous avez passé <b>${esc(d.inside)}</b> dans la Chambre.</p>
+      <p class="c-line mute" style="animation-delay:1500ms">Dehors, à peine ${esc(d.outside)} minute${d.outside > 1 ? "s" : ""} se ${d.outside > 1 ? "sont écoulées" : "est écoulée"}.</p>`
+  };
   // réévaluation de rang
   const k = d.rank[1], cf = RANK_SCENES[k] || RANK_SCENES.D;
   let army = "";
@@ -96,7 +111,7 @@ function run(id, data) {
   return new Promise(resolve => {
     const sc = scene(id, data), prev = document.activeElement;
     const el = document.createElement("div");
-    el.className = "cine" + (sc.flash ? " flash" : "");
+    el.className = "cine" + (sc.flash ? " flash" : "") + (sc.whiteout ? " whiteout" : "");
     el.style.setProperty("--c", sc.c);
     el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Cinématique du Système");
     el.innerHTML = `<svg class="cine-stage" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${sc.svg}</svg>

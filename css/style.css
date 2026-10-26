@@ -286,3 +286,39 @@ body.cine-open{overflow:hidden}
 @keyframes cineAura{50%{opacity:.26;transform:scale(1.12)}}
 @keyframes cineSpark{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-260px)}}
 @keyframes cineLine{from{opacity:0;transform:translateY(8px)}}
+/* Chambre Hors du Temps : un autre univers, blanc et sans fin */
+.chamber-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+.chamber-modes div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px dashed var(--line)}
+.chamber-modes b{font-family:var(--f-display);font-size:15px}
+.chamber-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.chamber-title{font-size:clamp(24px,5vw,34px);letter-spacing:.06em}
+.chamber-clock{display:flex;flex-direction:column;align-items:flex-end;font-family:var(--f-display);font-variant-numeric:tabular-nums}
+.chamber-clock b{font-size:20px;color:var(--glow)}
+.passage{padding:14px;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.passage p{line-height:1.65}
+.passage summary{cursor:pointer}
+.q-ask{font-family:var(--f-display);font-size:19px;font-weight:600;margin-block:4px 12px;overflow-wrap:anywhere}
+body.world-chamber{
+  --void:#e9eef6;--panel:#ffffff;--panel2:#f8faff;--line:#7a8fb3;--glow:#1d63c9;--ink:#0d1a33;--mute:#475a7b;
+  --gold:#8f5d00;--red:#b81f3b;--ok:#0b7a52;--mana:#5340c8;color-scheme:light;
+  background-color:var(--void);
+  background-image:radial-gradient(ellipse at 50% 30%,#ffffff 0,rgba(255,255,255,.6) 35%,transparent 70%),
+    linear-gradient(rgba(29,99,201,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(29,99,201,.05) 1px,transparent 1px);
+  background-size:auto,48px 48px,48px 48px}
+body.world-chamber .win{box-shadow:0 10px 40px rgba(29,99,201,.08),0 0 0 1px rgba(255,255,255,.8) inset}
+body.world-chamber input[type=text],body.world-chamber input[type=email],body.world-chamber input[type=password],body.world-chamber textarea,
+body.world-chamber .chat,body.world-chamber .tiles.answer{background:#f3f6fc}
+body.world-chamber input::placeholder{color:#5e6f8c}
+body.world-chamber .bar,body.world-chamber .timer{background:#dde5f2}
+body.world-chamber .btn:hover,body.world-chamber .btn:focus-visible{background:#eaf1fd}
+body.world-chamber .btn.main,body.world-chamber .cecr{color:#ffffff}
+body.world-chamber .btn.main:hover{background:#174fa1}
+body.world-chamber .toast{background:rgba(255,255,255,.97)}
+body.world-chamber .foot,body.world-chamber .wrap-foot{color:var(--mute)}
+/* porte de la Chambre (cinématique) */
+.c-door{fill:#f4f8ff;filter:drop-shadow(0 0 18px #ffffff) drop-shadow(0 0 40px #cfe3ff);transform-box:fill-box;transform-origin:center;animation:cineDoor 1.6s .3s cubic-bezier(.3,.7,.2,1) both}
+.c-beam{fill:#eaf2ff;opacity:.28;animation:cineIn 1.2s 1.2s ease-out both}
+.cine.whiteout::before{content:"";position:absolute;inset:0;z-index:3;background:#f4f8ff;opacity:0;pointer-events:none;animation:cineWhite 1.4s 4.8s ease-in forwards}
+@keyframes cineDoor{from{transform:scaleX(0)}}
+@keyframes cineWhite{to{opacity:1}}
+.gates.chamber-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
