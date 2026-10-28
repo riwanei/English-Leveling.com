@@ -85,6 +85,27 @@ function heardSpeech(q, text, score) {
 // =====================================================================
 const TABS = [["status", "Statut"], ["gates", "Portes"], ["powers", "Pouvoirs"], ["guild", "Guilde"], ["chamber", "Chambre"], ["reviews", "Avis"], ["account", "Compte"]];
 let R = null, timerId = null;
+// Menu du bas (mobile) : 4 onglets directs, le reste derrière « Plus »
+const ICONS = {
+  status: '<path d="M12 3l9 9-9 9-9-9z"/><path d="M12 8l4 4-4 4-4-4z"/>',
+  gates: '<ellipse cx="12" cy="12" rx="6.5" ry="9"/><ellipse cx="12" cy="12" rx="2.6" ry="5"/>',
+  chamber: '<path d="M6 21V3h12v18M3 21h18"/><path d="M14.5 12h.01"/>',
+  guild: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.2a3 3 0 010 5.6M18 14.4c1.8.9 3 2.9 3 5.6"/>',
+  more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  powers: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  reviews: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>',
+  account: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>'
+};
+const BAR = ["status", "gates", "chamber", "guild"];
+const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
+function bottomNav() {
+  const name = k => TABS.find(t => t[0] === k)[1];
+  const more = TABS.map(t => t[0]).filter(k => !BAR.includes(k));
+  const inMore = more.includes(S.tab);
+  return `<div class="bsheet" id="bsheet" hidden>${more.map(k => `<button data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ""}>${icon(k)}<span>${name(k)}</span></button>`).join("")}</div>
+    <nav class="bnav" aria-label="Menu principal">${BAR.map(k => `<button data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ""}>${icon(k)}<span>${name(k)}</span></button>`).join("")}
+    <button id="bmore" aria-expanded="false" aria-controls="bsheet" ${inMore ? 'class="on"' : ""}>${icon("more")}<span>${inMore ? name(S.tab) : "Plus"}</span></button></nav>`;
+}
 
 function shell() {
   checkDay();
@@ -101,8 +122,13 @@ function shell() {
         <div class="bar"><i style="width:${L.into / L.need * 100}%"></i></div>
         <div class="mute small" style="margin-top:4px;font-variant-numeric:tabular-nums">${L.into} / ${L.need} XP</div></div></div>
     </aside>
-    <div id="view" class="view-${S.tab}"></div></div>`;
-  app.querySelectorAll("nav button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); shell(); });
+    <div id="view" class="view-${S.tab}"></div></div>${bottomNav()}`;
+  app.querySelectorAll("button[data-tab]").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); shell(); window.scrollTo(0, 0); });
+  const sheet = $("#bsheet"), more = $("#bmore");
+  const openSheet = open => { sheet.hidden = !open; more.setAttribute("aria-expanded", open); };
+  more.onclick = e => { e.stopPropagation(); openSheet(sheet.hidden); };
+  document.onclick = e => { if (!sheet.hidden && !sheet.contains(e.target)) openSheet(false); };
+  document.onkeyup = e => { if (e.key === "Escape" && !sheet.hidden) { openSheet(false); more.focus(); } };
   $("#accbtn").onclick = () => { S.tab = "account"; save(); shell(); };
   const v = $("#view");
   ({ status: viewStatus, gates: viewGates, powers: viewPowers, guild: () => renderGuild(v), chamber: () => viewChamber(v, { gainXp, progressQuests, pushProgress, shell }), reviews: () => renderReviews(v), account: () => renderAccount(v) })[S.tab]();
