@@ -112,7 +112,7 @@ function shell() {
   const accountLabel = cloud.profile ? esc(cloud.profile.username) : cloud.session ? "Choisir mon pseudo" : "Se connecter";
   const L = lvl(S.xp), Rk = rank(L.l);
   app.classList.remove("narrow");
-  app.innerHTML = `<header class="title-bar"><div><div class="tag">Le Système vous a choisi</div><h1 class="brand">English <span>Leveling</span></h1></div>
+  app.innerHTML = `<header class="title-bar"><div><div class="tag">Le Système vous a choisi</div><h1 class="brand"><img class="brand-mark" src="img/icon.svg" alt="" width="40" height="40">English <span>Leveling</span></h1></div>
     <div class="head-right"><span class="mute">Niv. ${L.l} · Série ${S.streak} j</span>
     <button class="btn sm ${cloud.session ? "" : "main"}" id="accbtn">${accountLabel}</button></div></header>
     <div class="layout"><aside class="side">

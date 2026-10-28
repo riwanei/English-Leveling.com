@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs>
+  <linearGradient id="gPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6d6ff"/><stop offset=".45" stop-color="#8a5cff"/><stop offset="1" stop-color="#2a0f6b"/></linearGradient>
+  <linearGradient id="gElec" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fe8ff"/><stop offset=".5" stop-color="#4c8dff"/><stop offset="1" stop-color="#9b5cff"/></linearGradient>
+  <linearGradient id="gSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#b8c6dc"/><stop offset=".55" stop-color="#f4f8ff"/><stop offset="1" stop-color="#7d8ba3"/></linearGradient>
+  <linearGradient id="gWord" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9a4ff"/></linearGradient>
+  <radialGradient id="gPortal" cx="50%" cy="55%" r="55%"><stop offset="0" stop-color="#e9f6ff"/><stop offset=".35" stop-color="#6fb8ff"/><stop offset=".75" stop-color="#5b2ad6"/><stop offset="1" stop-color="#14062e"/></radialGradient>
+  <radialGradient id="gBadge" cx="50%" cy="40%" r="65%"><stop offset="0" stop-color="#1b1446"/><stop offset="1" stop-color="#05040f"/></radialGradient>
+  <filter id="fGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="fGlowBig" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs><rect width="400" height="400" fill="#07051a"/>
+  <path d="M104 196L124 104l38 58L200 58l38 104l38-58l20 92z" fill="url(#gPurple)" stroke="#efe4ff" stroke-width="1.5" filter="url(#fGlowBig)"/>
+  <path d="M200 58v138M162 162l-20 34M238 162l20 34" stroke="#f3ecff" stroke-opacity=".5" stroke-width="1.2"/>
+  <rect x="104" y="196" width="192" height="12" fill="#3b1a8f" stroke="#c9b3ff" stroke-width="1"/>
+  <path d="M140 236q24-16 50-2q-26 12-50 2z M260 236q-24-16-50-2q26 12 50 2z" fill="#a9ecff" filter="url(#fGlowBig)"/>
+  
+  <text x="200" y="300" text-anchor="middle" font-family="Chakra Petch" font-weight="600" font-size="15" letter-spacing="9" fill="#b9c8ea">ENGLISH</text>
+  <text x="200" y="346" text-anchor="middle" font-family="Chakra Petch" font-weight="700" font-size="46" letter-spacing="4" fill="url(#gWord)" filter="url(#fGlow)">LEVELING</text></svg>
