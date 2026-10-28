@@ -170,11 +170,11 @@ function viewStatus() {
 function viewGates() {
   const v = $("#view");
   v.innerHTML = `<p class="mute">${GAMES.length} portes réparties sur les niveaux du cadre européen (CECR), du rang E au rang SS+. Commence où tu te sens à l'aise : toutes les portes sont ouvertes.</p>` +
-    CATS.map(c => `<section aria-label="${c.name}"><div class="cat-head"><span class="cecr ${c.id === "S" ? "boss" : c.id === "SS+" ? "ss" : c.id === "C1" ? "elite" : ""}">${c.id}</span><h2>${c.name}</h2><span class="mute small">${c.id === "S" ? "" : "Portes de rang " + c.rank + " · "}${c.desc}</span></div>
+    CATS.map(c => `<section aria-label="${c.name}"><div class="cat-head${c.id === "S" ? " rank-s" : ""}"><span class="cecr ${c.id === "S" ? "boss" : c.id === "SS+" ? "ss" : c.id === "C1" ? "elite" : ""}">${c.id}</span><h2>${c.name}</h2><span class="mute small">${c.id === "S" ? "" : "Portes de rang " + c.rank + " · "}${c.desc}</span></div>
     <div class="gates">${GAMES.filter(g => g.cat === c.id).map(g => {
       const b = S.best[g.id];
       const badge = g.boss ? (S.bestBoss ? "Record " + S.bestBoss : "") : b ? (b.perfect ? "★ Parfait" : "Record " + b.ok + "/10") : "";
-      return `<button class="gate ${g.boss ? "boss" : g.cat === "SS+" ? "ss" : g.cat === "C1" ? "elite" : ""}" data-g="${g.id}"><span class="lv"><span>${STATNAMES[g.stat]}</span><em>${badge}</em></span><h3>${g.name}</h3><p>${g.desc}</p></button>`;
+      return `<button class="gate ${g.boss ? "boss" : g.cat === "S" ? "rank-s" : g.cat === "SS+" ? "ss" : g.cat === "C1" ? "elite" : ""}" data-g="${g.id}"><span class="lv"><span>${STATNAMES[g.stat]}</span><em>${badge}</em></span><h3>${g.name}</h3><p>${g.desc}</p></button>`;
     }).join("")}</div></section>`).join("");
   v.querySelectorAll(".gate").forEach(b => b.onclick = () => start(b.dataset.g));
 }

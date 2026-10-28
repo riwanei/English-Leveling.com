@@ -366,3 +366,7 @@ body.world-chamber .foot,body.world-chamber .wrap-foot{color:var(--mute)}
 @keyframes cineEyeOpen{from{transform:scaleY(.03);opacity:.3}}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-mark{width:clamp(32px,7vw,40px);height:auto;flex:none;filter:drop-shadow(0 0 8px rgba(138,92,255,.55))}
+/* portes de rang S : rouge */
+.gate.rank-s{border-color:var(--red);background:linear-gradient(180deg,rgba(255,90,118,.12),var(--panel))}
+.gate.rank-s h3,.gate.boss h3,.cat-head.rank-s h2{color:var(--red)}
+.gate.rank-s:hover,.gate.rank-s:focus-visible{box-shadow:0 0 22px rgba(255,90,118,.35);border-color:var(--red)}
