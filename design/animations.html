@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atelier des ombres — English Leveling</title>
+<link rel="stylesheet" href="../css/style.css">
+<body><main class="wrap" style="padding:60px 20px">
+<div class="tag">English Leveling · Cinématiques</div>
+<h1>Atelier des ombres</h1>
+<p>Un chasseur, une armée, un gardien ailé. Prévisualise les animations du jeu.</p>
+<div class="actions" style="margin:28px 0;flex-wrap:wrap">
+<button class="btn" data-scene="awaken">Éveil du chasseur</button>
+<button class="btn" data-scene="quest">Quête accomplie</button>
+<button class="btn" data-scene="levelup">Niveau supérieur</button>
+<button class="btn" data-rank="C">Premières ombres</button>
+<button class="btn" data-rank="A">Gardien ailé</button>
+<button class="btn" data-rank="S">Armée des ombres</button>
+<button class="btn" data-rank="N">Monarque</button>
+</div><p class="mute">Échap ou « Passer » pour fermer. Les animations respectent le réglage de réduction des mouvements de ton appareil.</p>
+<a href="../index.html">Retour au jeu</a>
+</main><script type="module">
+import {play} from '../js/cinema.js';
+const names={C:'Éveil des ombres',A:'Gardien des ombres',S:'Seigneur des ombres',N:'Monarque'};
+document.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+ const r=b.dataset.rank;
+ play(r?'rank':b.dataset.scene,{title:"Terminer 2 donjons",xp:80,goal:2,level:r?50:2,rank:[0,r||'E',names[r]||'Chasseur']});
+});
+</script></body></html>

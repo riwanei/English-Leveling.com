@@ -1,3 +1,4 @@
+import { guardian, radar } from "./guardians.js";
 // =====================================================================
 // English Leveling — moteur du jeu (onglets, donjons, pouvoirs, XP)
 // =====================================================================
@@ -27,7 +28,7 @@ function progressQuests() {
   QUESTS.forEach(q => {
     if (!S.daily.claimed.includes(q.id) && (S.daily[q.id] || 0) >= q.goal) {
       S.daily.claimed.push(q.id); gainXp(q.xp);
-      toast("Quête journalière", `« ${q.t} » accomplie. +${q.xp} XP`, "gold");
+      play("quest", { title: q.t, xp: q.xp, goal: q.goal });
     }
   });
 }
@@ -122,7 +123,7 @@ function shell() {
         <div class="bar"><i style="width:${L.into / L.need * 100}%"></i></div>
         <div class="mute small" style="margin-top:4px;font-variant-numeric:tabular-nums">${L.into} / ${L.need} XP</div></div></div>
     </aside>
-    <div id="view" class="view-${S.tab}"></div></div>${bottomNav()}`;
+    <div class="page-content">${["gates", "powers", "guild", "chamber"].includes(S.tab) ? `<div class="guardian-banner">${guardian(S.tab)}<div><div class="tag">Les gardiens du Système</div><p>Chaque entraînement éveille votre potentiel.</p></div></div>` : ""}<div id="view" class="view-${S.tab}"></div></div></div>${bottomNav()}`;
   app.querySelectorAll("button[data-tab]").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; save(); shell(); window.scrollTo(0, 0); });
   const sheet = $("#bsheet"), more = $("#bmore");
   const openSheet = open => { sheet.hidden = !open; more.setAttribute("aria-expanded", open); };
@@ -137,7 +138,7 @@ function shell() {
 function viewStatus() {
   const L = lvl(S.xp), Rk = rank(L.l);
   const rec = GAMES.filter(g => !g.boss).find(g => !S.best[g.id]) || pick(GAMES);
-  $("#view").innerHTML = `<section class="win" aria-label="Fenêtre de statut"><div class="tag" style="margin-bottom:8px">Statut</div>
+  $("#view").innerHTML = `<section class="win player-system" aria-label="Fenêtre de statut"><div class="system-heading"><span class="tag">Système · Profil du chasseur</span><button class="linkbtn" id="replay-intro">Revoir l’éveil</button></div><h2>STATUT DU JOUEUR</h2><div class="player-visuals">${guardian("status", true)}${radar(S.stats, STATNAMES)}</div>
     <div class="status"><div class="rank" aria-label="Rang ${Rk[1]}"><b>${Rk[1]}</b></div>
       <div><div class="lvl">Niveau ${L.l}</div><div class="mute">${Rk[2]}</div>
       <div class="bar" aria-label="Expérience"><i style="width:${L.into / L.need * 100}%"></i></div>
@@ -159,6 +160,7 @@ function viewStatus() {
     <button class="btn" id="gorev">Donner mon avis</button></div></section>` : ""}
   ${cloud.session ? "" : `<p class="note">Ta progression est enregistrée dans ce navigateur. Crée un compte (onglet Compte) pour la retrouver sur tous tes appareils et rejoindre une guilde.</p>`}
   <p class="foot"><button class="linkbtn" id="reset">Réinitialiser ma progression</button></p>`;
+  $("#replay-intro").onclick = () => play("awaken");
   $("#rec").onclick = () => start(rec.id);
   if ($("#gorev")) $("#gorev").onclick = () => { S.tab = "reviews"; save(); shell(); };
   $("#reset").onclick = e => {

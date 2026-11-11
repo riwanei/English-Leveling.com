@@ -6,8 +6,8 @@
 import { esc } from "./util.js";
 
 const INTRO_KEY = "english-leveling-intro";
-export const introSeen = () => { try { return !!localStorage.getItem(INTRO_KEY); } catch (e) { return true; } };
-const markIntro = () => { try { localStorage.setItem(INTRO_KEY, "1"); } catch (e) { /* stockage indisponible */ } };
+export const introSeen = () => { try { return !!sessionStorage.getItem(INTRO_KEY); } catch (e) { return true; } };
+const markIntro = () => { try { sessionStorage.setItem(INTRO_KEY, "1"); } catch (e) { /* stockage indisponible */ } };
 
 // ---------- Personnages (origine = entre les pieds, hauteur ~160) ----------
 const BODY = "M0 -160c-14 0-24 11-24 26c0 10 4 18 10 22l-22 10c-10 5-16 14-18 26l-10 76h18l8-50l6 50h64l6-50l8 50h18l-10-76c-2-12-8-21-18-26l-22-10c6-4 10-12 10-22c0-15-10-26-24-26z";
@@ -17,7 +17,10 @@ const EYES = `<ellipse class="eye" cx="-8" cy="-138" rx="3.4" ry="1.6"/><ellipse
 function hunter(x, y, s, crown) {
   return `<g transform="translate(${x} ${y}) scale(${s})"><g class="c-hunter">
     <ellipse class="c-aura" cx="0" cy="-80" rx="90" ry="120"/>
-    <path class="c-body" d="${BODY}"/><path class="c-body" d="${HOOD}"/>
+    <path class="c-coat c-body" d="M-18-112Q-52-90-65-10L-28-24-16 0 0-48 22 0 40-18 72-6Q42-76 18-112Z"/>
+    <path class="c-body" d="M-13-119L-30-102-35-59-22-54-15-87-10-55-18 0H-4L4-46 10 0H24L18-61 14-89 28-54 39-62 29-105 12-120Z"/>
+    <path class="c-body" d="M-16-142L-19-161-9-156-3-171 5-160 18-165 15-146 10-127 0-122-11-129Z"/>
+    <path class="c-seam" d="M-15-110L0-91 14-111M0-91V-55M-26-35L-12-61M28-33L14-63"/>
     <path class="c-blade" d="M58 -12l30 40l-5 4z"/>
     ${crown ? `<path class="c-crown" d="M-20 -176l6-22l8 13l6-19l6 19l8-13l6 22z"/>` : ""}
     ${EYES}</g></g>`;
@@ -27,7 +30,8 @@ function soldier(x, y, s, delay, knight) {
     ? `<path class="c-shadow" d="M0 -162c10-22 34-28 50-20c-16 2-30 10-38 24z"/><path class="c-shadow" d="M-74 -150h8v158h-8zM-86 -118h32v6h-32z"/>`
     : `<path class="c-shadow" d="M-18 -150l-12-20l18 10zM18 -150l12-20l-18 10z"/>`;
   return `<g transform="translate(${x} ${y}) scale(${s})"><g class="c-rise" style="animation-delay:${delay}ms">
-    <path class="c-shadow" d="${BODY}"/>${extra}
+    <path class="c-shadow" d="M-17-145L-13-161 0-171 13-161 17-145 10-125 29-120 48-99 31-91 27-61 35-17 18-24 15 0H3L0-50-5 0H-17L-19-24-36-17-27-61-31-91-48-99-29-120-10-125Z"/>
+    <path class="c-armor" d="M-27-112L0-99 27-112 18-82 0-72-18-82ZM-16-67L0-61 16-67M-12-57L0-51 12-57M0-164V-146"/>${extra}
     <ellipse class="eye shadow-eye" cx="-8" cy="-138" rx="3.4" ry="1.6"/><ellipse class="eye shadow-eye" cx="8" cy="-138" rx="3.4" ry="1.6"/></g></g>`;
 }
 function particles(n) {
@@ -56,10 +60,12 @@ function bolts(n) {
 // Géant en armure à couronne de pointes, entouré de vrilles d'ombre (origine = pieds)
 function giant(x, y, s, color, delay) {
   return `<g transform="translate(${x} ${y}) scale(${s})" style="--k:${color}"><g class="c-giant" style="animation-delay:${delay}ms">
+    <g class="c-wings"><path class="c-wing" d="M-42-110Q-76-204-162-230L-144-176-125-192-116-143-96-164-83-114Z"/><path class="c-wing" d="M42-110Q76-204 162-230L144-176 125-192 116-143 96-164 83-114Z"/></g>
     <path class="c-tendril" d="M-58 -100C-120 -130 -110 -190 -160 -225M58 -100C120 -130 110 -190 160 -225M-40 -60C-100 -40 -130 -80 -170 -60M40 -60C100 -40 130 -80 170 -60"/>
     <g transform="scale(1.3 1)"><path class="c-giant-body" d="${BODY}"/></g>
     <path class="c-giant-body" d="M-26 -176l-8-42l16 24l8-48l10 42l10-42l8 48l16-24l-8 42z"/>
     <path class="c-giant-body" d="M-60 -98l-44-34l28 46zM60 -98l44-34l-28 46z"/>
+    <path class="c-armor" style="stroke:var(--k)" d="M-45-109L-20-98 0-111 20-98 45-109 31-78 0-63-31-78ZM-23-56L0-47 23-56M-18-39L0-32 18-39"/>
     <path class="giant-eye" d="M-16 -140l12 3l-12 3zM16 -140l-12 3l12 3z"/></g></g>`;
 }
 
@@ -79,6 +85,11 @@ const SLOTS = [[-150, .62], [150, .62], [-250, .54], [250, .54], [-330, .46], [3
 const LEVEL_LINES = ["Vous êtes devenu plus fort.", "Vos réflexes s'aiguisent.", "Le Système a enregistré votre progression.", "Votre mana s'est accrue.", "Aucune porte ne vous résistera longtemps."];
 
 function scene(id, d) {
+  if (id === "quest") return {
+    c: "#53cfff", ms: 6500, quest: true,
+    svg: "",
+    text: `<div class="quest-emblem" aria-hidden="true">!</div><div class="tag">Notification du Système</div><h2>QUÊTE ACCOMPLIE</h2><p class="quest-objective">${esc(d.title)}</p><div class="quest-check">✓</div><p>Objectif atteint · ${esc(d.goal)} / ${esc(d.goal)}</p><div class="quest-reward">+${esc(d.xp)} <small>XP</small></div><p class="mute">Récompense ajoutée à votre progression.</p>`,
+  };
   if (id === "awaken") return {
     c: "var(--glow)", wait: true, cta: "Accepter",
     svg: `${ground}<ellipse class="c-portal" cx="400" cy="230" rx="96" ry="150"/><ellipse class="c-portal inner" cx="400" cy="230" rx="70" ry="124"/>${particles(26)}${hunter(400, 384, 1.05)}`,
@@ -141,7 +152,7 @@ function run(id, data) {
   return new Promise(resolve => {
     const sc = scene(id, data), prev = document.activeElement;
     const el = document.createElement("div");
-    el.className = "cine" + (sc.flash ? " flash" : "") + (sc.whiteout ? " whiteout" : "") + (sc.dark ? " dark" : "");
+    el.className = "cine" + (sc.quest ? " quest-cine" : "") + (sc.flash ? " flash" : "") + (sc.whiteout ? " whiteout" : "") + (sc.dark ? " dark" : "");
     el.style.setProperty("--c", sc.c);
     el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Cinématique du Système");
     el.innerHTML = `<svg class="cine-stage" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${sc.svg}</svg>
@@ -153,7 +164,14 @@ function run(id, data) {
       if (done) return; done = true; clearTimeout(t); if (id === "awaken") markIntro(); document.removeEventListener("keydown", onKey);
       el.classList.add("out"); setTimeout(() => { el.remove(); document.body.classList.remove("cine-open"); if (prev && prev.focus) prev.focus(); resolve(); }, 280);
     };
-    const onKey = e => { if (e.key === "Escape") close(); };
+    const onKey = e => {
+      if (e.key === "Escape") { e.stopImmediatePropagation(); close(); }
+      if (e.key === "Tab") {
+        const buttons = [...el.querySelectorAll("button")], first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
     document.addEventListener("keydown", onKey);
     el.querySelector("#cine-skip").onclick = close;
     if (sc.cta) { const ok = el.querySelector("#cine-ok"); ok.onclick = close; ok.focus(); }
