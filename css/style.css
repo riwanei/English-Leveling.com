@@ -421,3 +421,11 @@ body.world-chamber .foot,body.world-chamber .wrap-foot{color:var(--mute)}
 @keyframes guardianEnergy{to{stroke-dashoffset:-84}}
 @media(max-width:550px){.guardian-banner{padding:14px;gap:12px}.guardian-banner .guardian svg{width:90px;height:115px}.player-visuals{grid-template-columns:1fr}.player-visuals .guardian svg{height:175px}.stat-radar{max-width:270px}.player-system h2{font-size:21px}.quest-cine .cine-text{padding:20px 16px;gap:12px}}
 @media(prefers-reduced-motion:reduce){.guardian *{animation:none!important}}
+/* installation de l'application */
+.install-card{border-color:var(--mana)}
+.install-row{display:flex;align-items:center;gap:14px;margin-top:8px}
+.install-row img{flex:none;border:1px solid var(--line)}
+.install-row h3{font-size:17px}
+.install-steps{margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.share-glyph{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--glow);color:var(--glow);font-size:12px;vertical-align:middle}
+#view.view-status>.install-card{grid-column:1/-1}

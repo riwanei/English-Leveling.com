@@ -7,6 +7,7 @@ import { S, save, fresh, replaceState, checkDay } from "./state.js";
 import { CATS, GAMES, G, STATNAMES, QUESTS, POWERS } from "./content.js";
 import { play, introSeen } from "./cinema.js";
 import { viewChamber, inRoom } from "./chamber.js";
+import { initInstall, installCard, bindInstall } from "./install.js";
 import { cloud, initCloud, renderGuild, renderAccount, renderReviews, pushProgress, announceLevel } from "./cloud.js";
 
 const app = $("#app");
@@ -144,6 +145,7 @@ function viewStatus() {
       <div class="bar" aria-label="Expérience"><i style="width:${L.into / L.need * 100}%"></i></div>
       <div class="mute small" style="margin-top:4px;font-variant-numeric:tabular-nums">${L.into} / ${L.need} XP · ${S.total} bonnes réponses au total</div></div></div>
     <div class="stats">${Object.keys(STATNAMES).map(k => `<div class="stat"><span>${STATNAMES[k]}</span><b>${S.stats[k]}</b></div>`).join("")}</div></section>
+  ${installCard()}
   <section class="win" aria-label="Quêtes journalières"><div class="tag">Quête journalière · Préparation pour devenir fort</div>
     <div class="quests">${QUESTS.map(q => {
       const val = Math.min(S.daily[q.id] || 0, q.goal), d = S.daily.claimed.includes(q.id);
@@ -161,6 +163,7 @@ function viewStatus() {
   ${cloud.session ? "" : `<p class="note">Ta progression est enregistrée dans ce navigateur. Crée un compte (onglet Compte) pour la retrouver sur tous tes appareils et rejoindre une guilde.</p>`}
   <p class="foot"><button class="linkbtn" id="reset">Réinitialiser ma progression</button></p>`;
   $("#replay-intro").onclick = () => play("awaken");
+  bindInstall();
   $("#rec").onclick = () => start(rec.id);
   if ($("#gorev")) $("#gorev").onclick = () => { S.tab = "reviews"; save(); shell(); };
   $("#reset").onclick = e => {
@@ -392,6 +395,11 @@ document.addEventListener("keydown", e => {
 // Démarrage
 // =====================================================================
 shell();
+// Application installable : le bouton « Installer » apparaît dans le Statut dès que le navigateur le permet
+initInstall(ev => {
+  if (ev === "installed") toast("Système", "English Leveling est installé sur ton écran d'accueil.", "gold");
+  if (!R && !inRoom() && S.tab === "status") shell();
+});
 // Quand l'état du compte ou des guildes change, on rafraîchit l'écran (sauf en plein donjon)
 initCloud(({ full }) => {
   if (R || inRoom()) return;
